@@ -1,0 +1,1045 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReferencedAssemblies="System.dll&#13;&#10;System.Drawing.dll&#13;&#10;System.Windows.Forms.dll&#13;&#10;System.Data.dll&#13;&#10;System.Xml.dll&#13;&#10;NFe.Classes.dll&#13;&#10;DFe.Utils.dll&#13;&#10;NFe.Utils.dll&#13;&#10;DFe.Classes.dll&#13;&#10;DFe.Utils.dll&#13;&#10;CiafDFe.dll" DoublePass="true" ReportInfo.Created="09/01/2015 11:27:10" ReportInfo.Modified="06/26/2019 17:22:40" ReportInfo.CreatorVersion="2018.1.9.0" PrintSettings.CopyNames="Via Consumidor&#13;&#10;Via Consumidor&#13;&#10;Via do Estabelecimento">
+  <ScriptText>
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Windows.Forms;
+    using System.Drawing;
+    using System.Data;
+    using FastReport;
+    using FastReport.Data;
+    using FastReport.Dialog;
+    using FastReport.Barcode;
+    using FastReport.Table;
+    using FastReport.Utils;
+    using NFe.Classes.Informacoes.Pagamento;
+    using NFe.Utils;
+    using DFe.Utils;
+    using NFe.Classes.Informacoes.Destinatario;
+    using NFe.Classes.Informacoes.Identificacao.Tipos;
+    using DFe.Classes.Flags;
+    using NFe.Utils.Tributacao.Estadual;
+    using CiafDFe;
+
+    namespace FastReport
+    {
+    public class ReportScript
+    {
+
+    private void txtDescPagto_BeforePrint(object sender, EventArgs e)
+    {
+    if(Report.GetColumnValue(&quot;NFCe.NFe.infNFe.pag.tPag&quot;) != null)
+        txtDescPagto.Text = ((FormaPagamento)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.pag.tPag&quot;)).Descricao();                            
+    }
+    
+    private void txtDescDetPagto_BeforePrint(object sender, EventArgs e)
+    {
+      if(Report.GetDataSource(&quot;NFCe.NFe.infNFe.pag.detPag&quot;).RowCount != 0 &amp;&amp; Report.GetColumnValue(&quot;NFCe.NFe.infNFe.pag.detPag.tPag&quot;) != null)
+        txtDescDetPagto.Text = ((FormaPagamento)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.pag.detPag.tPag&quot;)).Descricao();
+    }
+
+    private void txtEmitCnpj_BeforePrint(object sender, EventArgs e)
+    {
+      var cnpj = (string)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.emit.CNPJ&quot;); 
+      if (!string.IsNullOrEmpty(cnpj))
+        txtEmitCnpj.Text = &quot;CNPJ: &quot; + String.Format(@&quot;{0:00\.000\.000\/0000\-00}&quot;, long.Parse(cnpj));
+    }
+
+    private void memChaveNfe_BeforePrint(object sender, EventArgs e)
+    {       
+      var chave = Substring( ((String)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.Id&quot;)), 3);
+      if (!string.IsNullOrEmpty(chave) &amp; chave.Length == 44)
+      {
+        var chaveFormatada = &quot;&quot;;
+        for (int i = 0; i &lt; chave.Length; i += 4)  
+          chaveFormatada = chaveFormatada + chave.Substring(i, 4) + &quot; &quot;;       
+        memChaveNfe.Text = chaveFormatada;      
+      }                                               
+    }
+
+    private void Destinatario_BeforePrint(object sender, EventArgs e)
+    {    
+      TrataCamposDestinatario();
+      dbDestinatario.Visible = ((NfceLayoutQrCode) Report.GetParameterValue(&quot;NfceLayoutQrCode&quot;) == NfceLayoutQrCode.Abaixo);
+    }
+    
+    private void TrataCamposDestinatario(){
+      if ( ((dest)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.dest&quot;)) == null ) //Destinatário não informado
+      {
+        txtConsumidor.Text = &quot;CONSUMIDOR NÃO IDENTIFICADO&quot;;
+        txtConsumidor2.Text = txtConsumidor.Text;        
+        txtDestEndereco.Text = &quot;&quot;;
+        txtDestEndereco2.Text = txtDestEndereco.Text;
+        txtDestNome.Text = &quot;&quot;;
+        txtDestNome2.Text = txtDestNome.Text;
+      }
+      else
+      {                                                
+        txtDestNome.Text = ObterDocumentoDest() + ((String)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.dest.xNome&quot;));
+        txtDestNome2.Text = txtDestNome.Text;
+      }   
+      //Endereço do destinatário é opcional para NFCe
+      txtDestEndereco.Visible = ((enderDest)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.dest.enderDest&quot;)) != null;      
+      txtDestEndereco2.Visible = txtDestEndereco.Visible;
+    }
+    
+    private string ObterDocumentoDest(){
+      var documentoDest = &quot;&quot;;
+      var cnpj = (String)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.dest.CNPJ&quot;);
+      var cpf = (String)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.dest.CPF&quot;);
+      var idEstrangeiro = (String)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.dest.idEstrangeiro&quot;);
+      if ( !String.IsNullOrEmpty(cnpj)) documentoDest = &quot;CNPJ: &quot; + String.Format(@&quot;{0:00\.000\.000\/0000\-00}&quot;, long.Parse(cnpj)) + &quot; &quot;;	 
+      if ( !String.IsNullOrEmpty(cpf)) documentoDest = &quot;CPF: &quot; + String.Format(@&quot;{0:000\.000\.000\-00}&quot;, long.Parse(cpf)) + &quot; &quot;;	 	  
+      if ( !String.IsNullOrEmpty(idEstrangeiro)) documentoDest = &quot;Id. Estrangeiro: &quot; + idEstrangeiro + &quot; &quot;;	 
+      return documentoDest;
+    }
+
+    private void dbProdutosUmaLinha_BeforePrint(object sender, EventArgs e)
+    {
+      //Conforme Manual de Padrões Padrões Técnicos do DANFE-NFC-e e QR Code, página 8. &quot;No caso de emissão em contingência, é obrigatória a impressão do Detalhe da Venda e do DANFE NFC-e&quot;
+      if ( ((TipoEmissao)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.ide.tpEmis&quot;)) == TipoEmissao.teNormal ) 
+        dbProdutosUmaLinha.Visible = ((NfceDetalheVendaNormal)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaNormal&quot;))) == NfceDetalheVendaNormal.UmaLinha;
+      else
+        dbProdutosUmaLinha.Visible = ((NfceDetalheVendaContigencia)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaContigencia&quot;))) == NfceDetalheVendaContigencia.UmaLinha;
+      
+      //Mostrar/Ocultar desconto concedido no item
+      txtProdutoUmaLinhaValorUnit.Text = &quot;[NFCe.NFe.infNFe.det.prod.vUnTrib]&quot;;
+      txtProdutoUmaLinhaValorTotal.Text = &quot;[NFCe.NFe.infNFe.det.prod.vProd]&quot;;
+      dbProdutosUmaLinha.Border.Lines = BorderLines.Bottom;
+      var imprimeDesconto = dbProdutosUmaLinha.Visible &amp; ((Boolean)Report.GetParameterValue(&quot;NfceImprimeDescontoItem&quot;)) &amp;
+        ((Nullable&lt;Decimal&gt;)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.det.prod.vDesc&quot;)) &gt; 0;      
+      cbDescontoItemUmaLinha.Visible = imprimeDesconto;  
+      if (imprimeDesconto)
+        dbProdutosUmaLinha.Border.Lines = BorderLines.None;
+    }
+
+    private void ghbProdutosDuasLinhas_BeforePrint(object sender, EventArgs e)
+    {
+      //Conforme Manual de Padrões Padrões Técnicos do DANFE-NFC-e e QR Code, página 8. &quot;No caso de emissão em contingência, é obrigatória a impressão do Detalhe da Venda e do DANFE NFC-e&quot;
+      if ( ((TipoEmissao)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.ide.tpEmis&quot;)) == TipoEmissao.teNormal ) 
+        ghbProdutosDuasLinhas.Visible = ((NfceDetalheVendaNormal)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaNormal&quot;))) == NfceDetalheVendaNormal.DuasLinhas;
+      else
+        ghbProdutosDuasLinhas.Visible = ((NfceDetalheVendaContigencia)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaContigencia&quot;))) == NfceDetalheVendaContigencia.DuasLinhas;
+    }
+
+    private void dbProdutosDuasLinhas_BeforePrint(object sender, EventArgs e)
+    {
+
+    //Conforme Manual de Padrões Padrões Técnicos do DANFE-NFC-e e QR Code, página 8. &quot;No caso de emissão em contingência, é obrigatória a impressão do Detalhe da Venda e do DANFE NFC-e&quot;
+      if ( ((TipoEmissao)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.ide.tpEmis&quot;)) == TipoEmissao.teNormal ) 
+        dbProdutosDuasLinhas.Visible = ((NfceDetalheVendaNormal)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaNormal&quot;))) == NfceDetalheVendaNormal.DuasLinhas;
+      else
+        dbProdutosDuasLinhas.Visible = ((NfceDetalheVendaContigencia)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaContigencia&quot;))) == NfceDetalheVendaContigencia.DuasLinhas;  
+      
+      //Mostrar/Ocultar desconto concedido no item
+      txtProdutoDuasLinhasValorUnit.Text = &quot;[NFCe.NFe.infNFe.det.prod.vUnTrib]&quot;;
+      txtProdutoDuasLinhasValorTotal.Text = &quot;[NFCe.NFe.infNFe.det.prod.vProd]&quot;;
+      dbProdutosDuasLinhas.Border.Lines = BorderLines.Bottom;
+      var imprimeDesconto = dbProdutosDuasLinhas.Visible &amp; ((Boolean)Report.GetParameterValue(&quot;NfceImprimeDescontoItem&quot;)) &amp;
+        ((Nullable&lt;Decimal&gt;)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.det.prod.vDesc&quot;)) &gt; 0;      
+      cbDescontoItemDuasLinhas.Visible = imprimeDesconto;                                      
+      if (imprimeDesconto)
+        dbProdutosDuasLinhas.Border.Lines = BorderLines.None;    
+      //Se possuir desconto, e estiver configurado para não exibi-lo, exibe os valores líquidos nos campos abaixo:
+      if (((Nullable&lt;Decimal&gt;)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.det.prod.vDesc&quot;)) &gt; 0 &amp; !imprimeDesconto)  
+      {
+        txtProdutoDuasLinhasValorUnit.Text = &quot;[([NFCe.NFe.infNFe.det.prod.vProd] - [NFCe.NFe.infNFe.det.prod.vDesc]) / [NFCe.NFe.infNFe.det.prod.qCom]]&quot;;
+        txtProdutoDuasLinhasValorTotal.Text = &quot;[[NFCe.NFe.infNFe.det.prod.vProd] - [NFCe.NFe.infNFe.det.prod.vDesc]]&quot;;
+    }
+
+    }
+
+    private void ProdutosinfAdProd_BeforePrint()
+    {
+    //if(!String.IsNullOrEmpty(NFCe.NFe.infNFe.det.infAdProd)) textad.Visible = true;
+    }
+
+
+
+
+    private void ghbProdutosUmaLinha_BeforePrint(object sender, EventArgs e)
+    {
+
+    //Conforme Manual de Padrões Padrões Técnicos do DANFE-NFC-e e QR Code, página 8. &quot;No caso de emissão em contingência, é obrigatória a impressão do Detalhe da Venda e do DANFE NFC-e&quot;
+      if ( ((TipoEmissao)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.ide.tpEmis&quot;)) == TipoEmissao.teNormal ) 
+        ghbProdutosUmaLinha.Visible = ((NfceDetalheVendaNormal)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaNormal&quot;))) == NfceDetalheVendaNormal.UmaLinha;
+      else
+        ghbProdutosUmaLinha.Visible = ((NfceDetalheVendaContigencia)((Int32)Report.GetParameterValue(&quot;NfceDetalheVendaContigencia&quot;))) == NfceDetalheVendaContigencia.UmaLinha;
+    }
+
+
+    private void rtbTitulo_BeforePrint(object sender, EventArgs e)
+    {
+      rtbTitulo.Visible = (poEmitLogo.Image != null);
+    }
+
+
+    private void memMsgFiscal_BeforePrint(object sender, EventArgs e)
+    {
+      //Conforme Manual de Padrões Padrões Técnicos do DANFE-NFC-e e QR Code, página 8
+      string msgHomologacao = &quot;&quot;;
+      string msgContigencia = &quot;&quot;;
+      if ( ((TipoAmbiente)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.ide.tpAmb&quot;)) == TipoAmbiente.Homologacao )
+        msgHomologacao = &quot;EMITIDA EM AMBIENTE DE HOMOLOGAÇÃO – SEM VALOR FISCAL&quot; + Environment.NewLine;
+      if ( ((TipoEmissao)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.ide.tpEmis&quot;)) != TipoEmissao.teNormal ) 
+        msgContigencia = &quot;EMITIDA EM CONTINGÊNCIA&quot; + Environment.NewLine;      
+
+      memMsgFiscal.Text = msgHomologacao + msgContigencia + memMsgFiscal.Text;
+    }
+
+
+    private void txtObs_BeforePrint(object sender, EventArgs e)
+    {
+      txtObs.Text = ((String)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.infAdic.infCpl&quot;)).Replace(&quot;;&quot;, Environment.NewLine);
+    }
+
+    private void PgNfce_StartPage(object sender, EventArgs e)
+    {
+      phbCancelado.Visible = ((Boolean)Report.GetParameterValue(&quot;NfceCancelado&quot;));
+      
+      if (!Engine.FinalPass) 
+        return;       
+      if ( (NfceModoImpressao) ((Int32)Report.GetParameterValue(&quot;NfceModoImpressao&quot;)) != NfceModoImpressao.UnicaPagina)
+        return;        
+        
+      PgNfce.PaperHeight = 
+        (rtbTituloHeight + 
+         phbEmitenteHeight + 
+         ((Boolean)Report.GetParameterValue(&quot;NfceCancelado&quot;) ? phbCancelado.Height : 0)+
+    ghbProdutosUmaLinhaHeight +
+    dbProdutosUmaLinhaHeight +
+    ghbProdutosDuasLinhasHeight +
+    dbProdutosDuasLinhasHeight +
+    gfbProdutosHeight +
+    dbPagamentoHeight +
+    dbDetPagamentoHeight +
+    dbTributosHeight +
+    dbObservacaoHeight +
+    dbInfoFiscalHeight +
+    dbNumeroSerieDhHeight +
+    dbConsultaHeight +
+    dbDestinatarioHeight +
+    dbQrCodeNormalHeight +
+    dbQrCodeLateralHeight +
+    dbProtocoloHeigth
+    ) /
+    Units.Millimeters + PgNfce.TopMargin + PgNfce.BottomMargin;
+
+    }
+
+    float dbProdutosUmaLinhaHeight;
+    private void dbProdutosUmaLinha_AfterPrint(object sender, EventArgs e)
+    {
+    dbProdutosUmaLinhaHeight += (dbProdutosUmaLinha.Visible ? dbProdutosUmaLinha.Height : 0) + (dbProdutosUmaLinha.Visible ? dbProdutosUmaLinha.Height : 0) + (cbDescontoItemUmaLinha.Visible ? cbDescontoItemUmaLinha.Height : 0);
+    }
+
+    float dbProdutosDuasLinhasHeight;
+    private void dbProdutosDuasLinhas_AfterPrint(object sender, EventArgs e)
+    {
+    dbProdutosDuasLinhasHeight += (dbProdutosDuasLinhas.Visible ?dbProdutosDuasLinhas.Height : 0) +  (dbProdutosDuasLinhas.Visible ?dbProdutosDuasLinhas.Height : 0) + (cbDescontoItemDuasLinhas.Visible ? cbDescontoItemDuasLinhas.Height : 0);
+    ProdutosinfAdProd_BeforePrint();
+    }
+
+    float dbInfoFiscalHeight;
+    private void dbInfoFiscal_AfterPrint(object sender, EventArgs e)
+    {
+    dbInfoFiscalHeight = (dbInfoFiscal.Visible ? dbInfoFiscal.Height : 0);
+    }
+
+    float dbNumeroSerieDhHeight;
+    private void dbNumeroSerieDh_AfterPrint(object sender, EventArgs e)
+    {
+    dbNumeroSerieDhHeight = (dbNumeroSerieDh.Visible ? dbNumeroSerieDh.Height : 0);
+    }
+
+    float dbConsultaHeight;
+    private void dbConsulta_AfterPrint(object sender, EventArgs e)
+    {
+    dbConsultaHeight = (dbConsulta.Visible ? dbConsulta.Height : 0);
+    }
+
+    float rtbTituloHeight;
+    private void rtbTitulo_AfterPrint(object sender, EventArgs e)
+    {
+    rtbTituloHeight = (rtbTitulo.Visible ? rtbTitulo.Height : 0);
+    }
+
+    float phbEmitenteHeight;
+    private void phbEmitente_AfterPrint(object sender, EventArgs e)
+    {
+    phbEmitenteHeight = (phbEmitente.Visible ? phbEmitente.Height : 0);
+    }
+
+    float ghbProdutosUmaLinhaHeight;
+    private void ghbProdutosUmaLinha_AfterPrint(object sender, EventArgs e)
+    {
+    ghbProdutosUmaLinhaHeight = (ghbProdutosUmaLinha.Visible ? ghbProdutosUmaLinha.Height : 0);
+    }
+
+    float ghbProdutosDuasLinhasHeight;
+    private void ghbProdutosDuasLinhas_AfterPrint(object sender, EventArgs e)
+    {
+    ghbProdutosDuasLinhasHeight = (ghbProdutosDuasLinhas.Visible ? ghbProdutosDuasLinhas.Height : 0);
+    }
+
+    float gfbProdutosHeight;
+    private void gfbProdutos_AfterPrint(object sender, EventArgs e)
+    {
+    gfbProdutosHeight = (gfbProdutos.Visible ? gfbProdutos.Height : 0);
+    }
+
+    float dbPagamentoHeight;
+    private void dbPagamento_AfterPrint(object sender, EventArgs e)
+    {
+    dbPagamentoHeight = (dbPagamento.Visible ? dbPagamento.Height : 0);
+    }
+
+    float dbDetPagamentoHeight;
+    private void dbDetPagamento_AfterPrint(object sender, EventArgs e)
+    {
+    dbDetPagamentoHeight = (dbDetPagamento.Visible ? dbDetPagamento.Height : 0);
+    }
+
+    float dbTributosHeight;
+    private void dbTributos_AfterPrint(object sender, EventArgs e)
+    {
+    dbTributosHeight = (dbTributos.Visible ? dbTributos.Height : 0);
+    }
+
+    float dbObservacaoHeight;
+    private void dbObservacao_AfterPrint(object sender, EventArgs e)
+    {
+    dbObservacaoHeight = (dbObservacao.Visible ? dbObservacao.Height : 0);
+    }
+
+    float dbDestinatarioHeight;
+    private void dbDestinatario_AfterPrint(object sender, EventArgs e)
+    {
+    dbDestinatarioHeight = (dbDestinatario.Visible ? dbDestinatario.Height : 0);
+    }
+
+    float dbQrCodeNormalHeight;
+    private void dbQrCode_AfterPrint(object sender, EventArgs e)
+    {
+    dbQrCodeNormalHeight = (dbQrCodeNormal.Visible ? dbQrCodeNormal.Height : 0);
+    }
+
+    private void cbDesconto_BeforePrint(object sender, EventArgs e)
+    {
+    cbDesconto.Visible = ((Decimal)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.total.ICMSTot.vDesc&quot;)) &gt; 0;
+    }    
+
+    private void txtValorTotal_BeforePrint(object sender, EventArgs e)
+    {
+      var vServ = ((Nullable&lt;Decimal&gt;)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.total.ISSQNtot.vServ&quot;)) == null ? 0 : ((Nullable&lt;Decimal&gt;)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.total.ISSQNtot.vServ&quot;));
+      txtValorTotal.Text = (((Decimal)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.total.ICMSTot.vProd&quot;)) + vServ).ToString();      
+    }
+
+    private void dbPagamento_BeforePrint(object sender, EventArgs e)
+    {
+      dbPagamento.Visible = Report.GetColumnValue(&quot;NFCe.NFe.infNFe.pag.tPag&quot;) != null;
+    }
+
+	private void dbDetPagamento_BeforePrint(object sender, EventArgs e)
+    {
+      dbDetPagamento.Visible = Report.GetDataSource(&quot;NFCe.NFe.infNFe.pag.detPag&quot;).RowCount != 0 &amp;&amp; Report.GetColumnValue(&quot;NFCe.NFe.infNFe.pag.detPag.tPag&quot;) != null;
+    }
+	
+	private void dbTroco_BeforePrint(object sender, EventArgs e)
+    {
+      dbTroco.Visible = Report.GetColumnValue(&quot;NFCe.NFe.infNFe.pag.vTroco&quot;) != null;
+    }
+
+
+    private void dbQrCodeLateral_BeforePrint(object sender, EventArgs e)
+    {
+      TrataCamposDestinatario();
+      dbQrCodeLateral.Visible = ((NfceLayoutQrCode) Report.GetParameterValue(&quot;NfceLayoutQrCode&quot;) == NfceLayoutQrCode.Lateral);        
+    }
+
+    float dbQrCodeLateralHeight;
+    private void dbQrCodeLateral_AfterPrint(object sender, EventArgs e)
+    {
+      dbQrCodeLateralHeight = (dbQrCodeLateral.Visible ? dbQrCodeLateral.Height : 0);
+    }
+
+    float dbProtocoloHeigth;
+    private void dbProtocolo_AfterPrint(object sender, EventArgs e)
+    {
+      dbProtocoloHeigth = (dbProtocolo.Visible ? dbProtocolo.Height : 0);      
+    }
+
+    private void dbQrCodeNormal_BeforePrint(object sender, EventArgs e)
+    {
+      dbQrCodeNormal.Visible = ((NfceLayoutQrCode) Report.GetParameterValue(&quot;NfceLayoutQrCode&quot;) == NfceLayoutQrCode.Abaixo);
+    }
+
+    private void dbProtocolo_BeforePrint(object sender, EventArgs e)
+    {
+      txtProtocoloAutorizacao.Visible = ((TipoEmissao)Report.GetColumnValue(&quot;NFCe.NFe.infNFe.ide.tpEmis&quot;)) == TipoEmissao.teNormal;
+    }
+
+    private void dbNumeroSerieDh_BeforePrint(object sender, EventArgs e)
+    {
+      dbNumeroSerieDh.Visible = ((NfceLayoutQrCode) Report.GetParameterValue(&quot;NfceLayoutQrCode&quot;) == NfceLayoutQrCode.Abaixo);      
+    }
+  }
+}</ScriptText>
+  <Dictionary>
+    <BusinessObjectDataSource Name="NFCe" ReferenceName="NFCe" DataType="NFe.Classes.nfeProc[], NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null" Enabled="true">
+      <Column Name="versao" DataType="System.String"/>
+      <Column Name="NFe" DataType="NFe.Classes.NFe, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+        <Column Name="infNFe" DataType="NFe.Classes.Informacoes.infNFe, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+          <Column Name="versao" DataType="System.String"/>
+          <Column Name="Id" DataType="System.String"/>
+          <Column Name="ide" DataType="NFe.Classes.Informacoes.Identificacao.ide, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="cUF" DataType="DFe.Classes.Entidades.Estado, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="cNF" DataType="System.String"/>
+            <Column Name="natOp" DataType="System.String"/>
+            <Column Name="indPag" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Identificacao.Tipos.IndicadorPagamento, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            <Column Name="mod" DataType="DFe.Classes.Flags.ModeloDocumento, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="serie" DataType="System.Int32"/>
+            <Column Name="nNF" DataType="System.Int64"/>
+            <Column Name="dEmi" DataType="System.DateTime"/>
+            <Column Name="dSaiEnt" DataType="System.DateTime"/>
+            <Column Name="dhEmi" DataType="System.DateTimeOffset"/>
+            <Column Name="dhSaiEnt" DataType="System.Nullable`1[[System.DateTimeOffset, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="tpNF" DataType="NFe.Classes.Informacoes.Identificacao.Tipos.TipoNFe, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="idDest" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Identificacao.Tipos.DestinoOperacao, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            <Column Name="cMunFG" DataType="System.Int64"/>
+            <Column Name="tpImp" DataType="NFe.Classes.Informacoes.Identificacao.Tipos.TipoImpressao, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="tpEmis" DataType="NFe.Classes.Informacoes.Identificacao.Tipos.TipoEmissao, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="cDV" DataType="System.Int32"/>
+            <Column Name="tpAmb" DataType="DFe.Classes.Flags.TipoAmbiente, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="finNFe" DataType="NFe.Classes.Informacoes.Identificacao.Tipos.FinalidadeNFe, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="indFinal" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Identificacao.Tipos.ConsumidorFinal, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            <Column Name="indPres" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Identificacao.Tipos.PresencaComprador, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            <Column Name="procEmi" DataType="NFe.Classes.Informacoes.Identificacao.Tipos.ProcessoEmissao, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="verProc" DataType="System.String"/>
+            <Column Name="dhCont" DataType="System.DateTimeOffset"/>
+            <Column Name="xJust" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource1" Alias="NFref" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Identificacao.NFref, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="NFref"/>
+            <Column Name="ProxydEmi" DataType="System.String"/>
+            <Column Name="ProxydSaiEnt" DataType="System.String"/>
+            <Column Name="ProxyDhEmi" DataType="System.String"/>
+            <Column Name="ProxydhSaiEnt" DataType="System.String"/>
+            <Column Name="ProxydhCont" DataType="System.String"/>
+            <Column Name="indPagSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+          </Column>
+          <Column Name="emit" DataType="NFe.Classes.Informacoes.Emitente.emit, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CNPJ" DataType="System.String"/>
+            <Column Name="CPF" DataType="System.String"/>
+            <Column Name="xNome" DataType="System.String"/>
+            <Column Name="xFant" DataType="System.String"/>
+            <Column Name="enderEmit" DataType="NFe.Classes.Informacoes.Emitente.enderEmit, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="xLgr" DataType="System.String"/>
+              <Column Name="nro" DataType="System.String"/>
+              <Column Name="xCpl" DataType="System.String"/>
+              <Column Name="xBairro" DataType="System.String"/>
+              <Column Name="cMun" DataType="System.Int64"/>
+              <Column Name="xMun" DataType="System.String"/>
+              <Column Name="UF" DataType="DFe.Classes.Entidades.Estado, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="CEP" DataType="System.String"/>
+              <Column Name="cPais" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="xPais" DataType="System.String"/>
+              <Column Name="fone" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="ProxyUF" DataType="System.String"/>
+            </Column>
+            <Column Name="IE" DataType="System.String"/>
+            <Column Name="IEST" DataType="System.String"/>
+            <Column Name="IM" DataType="System.String"/>
+            <Column Name="CNAE" DataType="System.String"/>
+            <Column Name="CRT" DataType="NFe.Classes.Informacoes.Emitente.CRT, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+          </Column>
+          <Column Name="avulsa" DataType="NFe.Classes.Informacoes.avulsa, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CNPJ" DataType="System.String"/>
+            <Column Name="xOrgao" DataType="System.String"/>
+            <Column Name="matr" DataType="System.String"/>
+            <Column Name="xAgente" DataType="System.String"/>
+            <Column Name="fone" DataType="System.String"/>
+            <Column Name="UF" DataType="System.String"/>
+            <Column Name="nDAR" DataType="System.String"/>
+            <Column Name="dEmi" DataType="System.String"/>
+            <Column Name="vDAR" DataType="System.Decimal"/>
+            <Column Name="repEmi" DataType="System.String"/>
+            <Column Name="dPag" DataType="System.String"/>
+          </Column>
+          <Column Name="dest" DataType="NFe.Classes.Informacoes.Destinatario.dest, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CNPJ" DataType="System.String"/>
+            <Column Name="CPF" DataType="System.String"/>
+            <Column Name="idEstrangeiro" DataType="System.String"/>
+            <Column Name="xNome" DataType="System.String"/>
+            <Column Name="enderDest" DataType="NFe.Classes.Informacoes.Destinatario.enderDest, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="xLgr" DataType="System.String"/>
+              <Column Name="nro" DataType="System.String"/>
+              <Column Name="xCpl" DataType="System.String"/>
+              <Column Name="xBairro" DataType="System.String"/>
+              <Column Name="cMun" DataType="System.Int64"/>
+              <Column Name="xMun" DataType="System.String"/>
+              <Column Name="UF" DataType="System.String"/>
+              <Column Name="CEP" DataType="System.String"/>
+              <Column Name="cPais" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="xPais" DataType="System.String"/>
+              <Column Name="fone" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            </Column>
+            <Column Name="indIEDest" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Destinatario.indIEDest, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            <Column Name="IE" DataType="System.String"/>
+            <Column Name="ISUF" DataType="System.String"/>
+            <Column Name="IM" DataType="System.String"/>
+            <Column Name="email" DataType="System.String"/>
+          </Column>
+          <Column Name="retirada" DataType="NFe.Classes.Informacoes.retirada, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CNPJ" DataType="System.String"/>
+            <Column Name="CPF" DataType="System.String"/>
+            <Column Name="xLgr" DataType="System.String"/>
+            <Column Name="nro" DataType="System.String"/>
+            <Column Name="xCpl" DataType="System.String"/>
+            <Column Name="xBairro" DataType="System.String"/>
+            <Column Name="cMun" DataType="System.Int64"/>
+            <Column Name="xMun" DataType="System.String"/>
+            <Column Name="UF" DataType="System.String"/>
+            <Column Name="xNome" DataType="System.String"/>
+            <Column Name="CEP" DataType="System.Int64"/>
+            <Column Name="ProxyCEP" DataType="System.String"/>
+            <Column Name="cPais" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="cPaisSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="xPais" DataType="System.String"/>
+            <Column Name="fone" DataType="System.String"/>
+            <Column Name="email" DataType="System.String"/>
+            <Column Name="IE" DataType="System.String"/>
+          </Column>
+          <Column Name="entrega" DataType="NFe.Classes.Informacoes.entrega, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CNPJ" DataType="System.String"/>
+            <Column Name="CPF" DataType="System.String"/>
+            <Column Name="xLgr" DataType="System.String"/>
+            <Column Name="nro" DataType="System.String"/>
+            <Column Name="xCpl" DataType="System.String"/>
+            <Column Name="xBairro" DataType="System.String"/>
+            <Column Name="cMun" DataType="System.Int64"/>
+            <Column Name="xMun" DataType="System.String"/>
+            <Column Name="UF" DataType="System.String"/>
+            <Column Name="xNome" DataType="System.String"/>
+            <Column Name="CEP" DataType="System.Int64"/>
+            <Column Name="ProxyCEP" DataType="System.String"/>
+            <Column Name="cPais" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="cPaisSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="xPais" DataType="System.String"/>
+            <Column Name="fone" DataType="System.String"/>
+            <Column Name="email" DataType="System.String"/>
+            <Column Name="IE" DataType="System.String"/>
+          </Column>
+          <BusinessObjectDataSource Name="autXML" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.autXML, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+            <Column Name="CNPJ" DataType="System.String"/>
+            <Column Name="CPF" DataType="System.String"/>
+          </BusinessObjectDataSource>
+          <BusinessObjectDataSource Name="det" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Detalhe.det, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+            <Column Name="nItem" DataType="System.Int32"/>
+            <Column Name="prod" DataType="NFe.Classes.Informacoes.Detalhe.prod, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="cProd" DataType="System.String"/>
+              <Column Name="cEAN" DataType="System.String"/>
+              <Column Name="xProd" DataType="System.String"/>
+              <Column Name="NCM" DataType="System.String"/>
+              <Column Name="NVE" DataType="System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]">
+                <Column Name="Length" DataType="System.Int32"/>
+              </Column>
+              <Column Name="EXTIPI" DataType="System.String"/>
+              <Column Name="CFOP" DataType="System.Int32"/>
+              <Column Name="uCom" DataType="System.String"/>
+              <Column Name="qCom" DataType="System.Decimal"/>
+              <Column Name="vUnCom" DataType="System.Decimal"/>
+              <Column Name="vProd" DataType="System.Decimal"/>
+              <Column Name="cEANTrib" DataType="System.String"/>
+              <Column Name="uTrib" DataType="System.String"/>
+              <Column Name="qTrib" DataType="System.Decimal"/>
+              <Column Name="vUnTrib" DataType="System.Decimal"/>
+              <Column Name="vFrete" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vSeg" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vDesc" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vOutro" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="indTot" DataType="NFe.Classes.Informacoes.Detalhe.IndicadorTotal, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="xPed" DataType="System.String"/>
+              <Column Name="nItemPed" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="nFCI" DataType="System.String"/>
+              <Column Name="ProdutoEspecifico" DataType="NFe.Classes.Informacoes.Detalhe.ProdEspecifico.ProdutoEspecifico, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="nRECOPI" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource2" Alias="DI" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Detalhe.DeclaracaoImportacao.DI, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="DI"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource3" Alias="detExport" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Detalhe.Exportacao.detExport, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="detExport"/>
+              <Column Name="CEST" DataType="System.String"/>
+              <Column Name="indEscala" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Detalhe.indEscala, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+              <Column Name="indEscalaSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="CNPJFab" DataType="System.String"/>
+              <Column Name="cBenef" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource14" Alias="rastro" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Detalhe.rastro, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="rastro"/>
+            </Column>
+            <Column Name="imposto" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.imposto, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="vTotTrib" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="ICMS" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Estadual.ICMS, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="TipoICMS" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Estadual.Tipos.ICMSBasico, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                  <Column Name="orig" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Estadual.Tipos.OrigemMercadoria, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+                  <Column Name="CSOSN" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Estadual.Tipos.Csosnicms, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+                </Column>
+              </Column>
+              <Column Name="IPI" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.IPI, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="clEnq" DataType="System.String"/>
+                <Column Name="CNPJProd" DataType="System.String"/>
+                <Column Name="cSelo" DataType="System.String"/>
+                <Column Name="qSelo" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="cEnq" DataType="System.Int32"/>
+                <Column Name="TipoIPI" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.Tipos.IPIBasico, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                  <Column Name="CST" DataType="null"/>
+                  <Column Name="vBC" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="pIPI" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="qUnid" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="vUnid" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="vIPI" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                </Column>
+              </Column>
+              <Column Name="II" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.II, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="vBC" DataType="System.Decimal"/>
+                <Column Name="vDespAdu" DataType="System.Decimal"/>
+                <Column Name="vII" DataType="System.Decimal"/>
+                <Column Name="vIOF" DataType="System.Decimal"/>
+              </Column>
+              <Column Name="PIS" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.PIS, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="TipoPIS" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.Tipos.PISBasico, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                  <Column Name="CST" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.Tipos.CSTPIS, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+                  <Column Name="vBC" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="pPIS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="qBCProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="vAliqProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="vPIS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                </Column>
+              </Column>
+              <Column Name="PISST" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.PISST, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="vBC" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="pPIS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="qBCProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vAliqProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vPIS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              </Column>
+              <Column Name="COFINS" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.COFINS, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="TipoCOFINS" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.Tipos.COFINSBasico, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                  <Column Name="CST" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.Tipos.CSTCOFINS, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+                  <Column Name="vBC" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="pCOFINS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="qBCProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="vAliqProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                  <Column Name="vCOFINS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                </Column>
+              </Column>
+              <Column Name="COFINSST" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Federal.COFINSST, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="vBC" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="pCOFINS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="qBCProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vAliqProd" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vCOFINS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              </Column>
+              <Column Name="ISSQN" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Municipal.ISSQN, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="vBC" DataType="System.Decimal"/>
+                <Column Name="vAliq" DataType="System.Decimal"/>
+                <Column Name="vISSQN" DataType="System.Decimal"/>
+                <Column Name="cMunFG" DataType="System.Int64"/>
+                <Column Name="cListServ" DataType="System.String"/>
+                <Column Name="vDeducao" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vOutro" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vDescIncond" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vDescCond" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="vISSRet" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="cServico" DataType="System.String"/>
+                <Column Name="cMun" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="cPais" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="nProcesso" DataType="System.String"/>
+                <Column Name="indIncentivo" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Municipal.indIncentivo, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+                <Column Name="indISS" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Municipal.IndicadorISS, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+              </Column>
+              <Column Name="ICMSUFDest" Enabled="false" DataType="NFe.Classes.Informacoes.Detalhe.Tributacao.Estadual.ICMSUFDest, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+            </Column>
+            <Column Name="impostoDevol" DataType="NFe.Classes.Informacoes.Detalhe.impostoDevol, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="pDevol" DataType="System.Decimal"/>
+              <Column Name="IPI" DataType="NFe.Classes.Informacoes.Detalhe.IPIDevolvido, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="vIPIDevol" DataType="System.Decimal"/>
+              </Column>
+            </Column>
+            <Column Name="infAdProd" DataType="System.String"/>
+          </BusinessObjectDataSource>
+          <Column Name="total" DataType="NFe.Classes.Informacoes.Total.total, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="ICMSTot" DataType="NFe.Classes.Informacoes.Total.ICMSTot, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="vBC" DataType="System.Decimal"/>
+              <Column Name="vICMS" DataType="System.Decimal"/>
+              <Column Name="vICMSDeson" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vBCST" DataType="System.Decimal"/>
+              <Column Name="vST" DataType="System.Decimal"/>
+              <Column Name="vProd" DataType="System.Decimal"/>
+              <Column Name="vFrete" DataType="System.Decimal"/>
+              <Column Name="vSeg" DataType="System.Decimal"/>
+              <Column Name="vDesc" DataType="System.Decimal"/>
+              <Column Name="vII" DataType="System.Decimal"/>
+              <Column Name="vIPI" DataType="System.Decimal"/>
+              <Column Name="vPIS" DataType="System.Decimal"/>
+              <Column Name="vCOFINS" DataType="System.Decimal"/>
+              <Column Name="vOutro" DataType="System.Decimal"/>
+              <Column Name="vNF" DataType="System.Decimal"/>
+              <Column Name="vTotTrib" DataType="System.Decimal"/>
+              <Column Name="vFCPUFDest" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vICMSUFDest" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vICMSUFRemet" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vFCP" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vFCPSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="vFCPST" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vFCPSTSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="vFCPSTRet" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vFCPSTRetSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="vIPIDevol" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vIPIDevolSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+            </Column>
+            <Column Name="ISSQNtot" DataType="NFe.Classes.Informacoes.Total.ISSQNtot, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="vServ" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vBC" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vISS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vPIS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vCOFINS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="dCompet" DataType="System.String"/>
+              <Column Name="vDeducao" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vOutro" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vDescIncond" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vDescCond" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vISSRet" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="cRegTrib" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Total.RegTribISSQN, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            </Column>
+            <Column Name="retTrib" DataType="NFe.Classes.Informacoes.Total.retTrib, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="vRetPIS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vRetCOFINS" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vRetCSLL" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vBCIRRF" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vIRRF" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vBCRetPrev" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vRetPrev" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            </Column>
+          </Column>
+          <Column Name="transp" DataType="NFe.Classes.Informacoes.Transporte.transp, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="modFrete" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Transporte.ModalidadeFrete, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            <Column Name="transporta" DataType="NFe.Classes.Informacoes.Transporte.transporta, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="CNPJ" DataType="System.String"/>
+              <Column Name="CPF" DataType="System.String"/>
+              <Column Name="xNome" DataType="System.String"/>
+              <Column Name="IE" DataType="System.String"/>
+              <Column Name="xEnder" DataType="System.String"/>
+              <Column Name="xMun" DataType="System.String"/>
+              <Column Name="UF" DataType="System.String"/>
+            </Column>
+            <Column Name="retTransp" DataType="NFe.Classes.Informacoes.Transporte.retTransp, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="vServ" DataType="System.Decimal"/>
+              <Column Name="vBCRet" DataType="System.Decimal"/>
+              <Column Name="pICMSRet" DataType="System.Decimal"/>
+              <Column Name="vICMSRet" DataType="System.Decimal"/>
+              <Column Name="CFOP" DataType="System.Int32"/>
+              <Column Name="cMunFG" DataType="System.Int64"/>
+            </Column>
+            <Column Name="veicTransp" DataType="NFe.Classes.Informacoes.Transporte.veicTransp, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="placa" DataType="System.String"/>
+              <Column Name="UF" DataType="System.String"/>
+              <Column Name="RNTC" DataType="System.String"/>
+            </Column>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource4" Alias="reboque" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Transporte.reboque, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="reboque"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource5" Alias="vol" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Transporte.vol, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="vol"/>
+            <Column Name="vagao" DataType="System.String"/>
+            <Column Name="balsa" DataType="System.String"/>
+            <Column Name="modFreteSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+          </Column>
+          <Column Name="cobr" DataType="NFe.Classes.Informacoes.Cobranca.cobr, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="fat" DataType="NFe.Classes.Informacoes.Cobranca.fat, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="nFat" DataType="System.String"/>
+              <Column Name="vOrig" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vDesc" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="vLiq" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            </Column>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource6" Alias="dup" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Cobranca.dup, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="dup"/>
+          </Column>
+          <BusinessObjectDataSource Name="pag" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Pagamento.pag, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+            <Column Name="tPag" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Pagamento.FormaPagamento, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            <Column Name="vPag" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="card" DataType="NFe.Classes.Informacoes.Pagamento.card, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="CNPJ" DataType="System.String"/>
+              <Column Name="tBand" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Pagamento.BandeiraCartao, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+              <Column Name="cAut" DataType="System.String"/>
+              <Column Name="tpIntegra" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Pagamento.TipoIntegracaoPagamento, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+            </Column>
+            <Column Name="vTroco" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <BusinessObjectDataSource Name="detPag" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Pagamento.detPag, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+              <Column Name="tPag" DataType="NFe.Classes.Informacoes.Pagamento.FormaPagamento, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="vPag" DataType="System.Decimal"/>
+              <Column Name="card" DataType="NFe.Classes.Informacoes.Pagamento.card, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="CNPJ" DataType="System.String"/>
+                <Column Name="tBand" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Pagamento.BandeiraCartao, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+                <Column Name="cAut" DataType="System.String"/>
+                <Column Name="tpIntegra" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Pagamento.TipoIntegracaoPagamento, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+              </Column>
+              <Column Name="indPag" DataType="System.Nullable`1[[NFe.Classes.Informacoes.Identificacao.Tipos.IndicadorPagamentoDetalhePagamento, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]"/>
+              <Column Name="indPagSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+            </BusinessObjectDataSource>
+            <Column Name="vTrocoSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="tPagSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="vPagSpecified" DataType="System.Boolean" BindableControl="CheckBox"/>
+          </BusinessObjectDataSource>
+          <Column Name="infAdic" DataType="NFe.Classes.Informacoes.Observacoes.infAdic, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="infAdFisco" DataType="System.String"/>
+            <Column Name="infCpl" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource7" Alias="obsCont" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Observacoes.obsCont, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="obsCont"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource8" Alias="obsFisco" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Observacoes.obsFisco, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="obsFisco"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource9" Alias="procRef" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Observacoes.procRef, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="procRef"/>
+          </Column>
+          <Column Name="exporta" DataType="NFe.Classes.Informacoes.exporta, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="UFSaidaPais" DataType="System.String"/>
+            <Column Name="xLocExporta" DataType="System.String"/>
+            <Column Name="xLocDespacho" DataType="System.String"/>
+          </Column>
+          <Column Name="compra" DataType="NFe.Classes.Informacoes.compra, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="xNEmp" DataType="System.String"/>
+            <Column Name="xPed" DataType="System.String"/>
+            <Column Name="xCont" DataType="System.String"/>
+          </Column>
+          <Column Name="cana" DataType="NFe.Classes.Informacoes.Cana.cana, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="safra" DataType="System.String"/>
+            <Column Name="ref" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource10" Alias="forDia" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Cana.forDia, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="forDia"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource11" Alias="deduc" Enabled="false" DataType="System.Collections.Generic.List`1[[NFe.Classes.Informacoes.Cana.deduc, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="deduc"/>
+          </Column>
+          <Column Name="infRespTec" Enabled="false" DataType="Shared.NFe.Classes.Informacoes.InfRespTec.infRespTec, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+        </Column>
+        <Column Name="Signature" DataType="DFe.Classes.Assinatura.Signature, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+          <Column Name="SignedInfo" DataType="DFe.Classes.Assinatura.SignedInfo, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CanonicalizationMethod" DataType="DFe.Classes.Assinatura.CanonicalizationMethod, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="Algorithm" DataType="System.String"/>
+            </Column>
+            <Column Name="SignatureMethod" DataType="DFe.Classes.Assinatura.SignatureMethod, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="Algorithm" DataType="System.String"/>
+            </Column>
+            <Column Name="Reference" DataType="DFe.Classes.Assinatura.Reference, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="URI" DataType="System.String"/>
+              <Column Name="DigestMethod" DataType="DFe.Classes.Assinatura.DigestMethod, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="Algorithm" DataType="System.String"/>
+              </Column>
+              <Column Name="DigestValue" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource12" Alias="Transforms" Enabled="false" DataType="System.Collections.Generic.List`1[[DFe.Classes.Assinatura.Transform, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="Transforms"/>
+            </Column>
+          </Column>
+          <Column Name="SignatureValue" DataType="System.String"/>
+          <Column Name="KeyInfo" DataType="DFe.Classes.Assinatura.KeyInfo, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="X509Data" DataType="DFe.Classes.Assinatura.X509Data, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="X509Certificate" DataType="System.String"/>
+            </Column>
+          </Column>
+        </Column>
+        <Column Name="infNFeSupl" Enabled="false" DataType="NFe.Classes.infNFeSupl, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+      </Column>
+      <Column Name="protNFe" DataType="NFe.Classes.Protocolo.protNFe, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+        <Column Name="versao" DataType="System.String"/>
+        <Column Name="infProt" DataType="NFe.Classes.Protocolo.infProt, NFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Id" DataType="System.String"/>
+          <Column Name="tpAmb" DataType="DFe.Classes.Flags.TipoAmbiente, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null"/>
+          <Column Name="verAplic" DataType="System.String"/>
+          <Column Name="chNFe" DataType="System.String"/>
+          <Column Name="dhRecbto" DataType="System.DateTime"/>
+          <Column Name="nProt" DataType="System.String"/>
+          <Column Name="digVal" DataType="System.String"/>
+          <Column Name="cStat" DataType="System.Int32"/>
+          <Column Name="xMotivo" DataType="System.String"/>
+          <Column Name="Signature" DataType="DFe.Classes.Assinatura.Signature, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+            <Column Name="SignedInfo" DataType="DFe.Classes.Assinatura.SignedInfo, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="CanonicalizationMethod" DataType="DFe.Classes.Assinatura.CanonicalizationMethod, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="Algorithm" DataType="System.String"/>
+              </Column>
+              <Column Name="SignatureMethod" DataType="DFe.Classes.Assinatura.SignatureMethod, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="Algorithm" DataType="System.String"/>
+              </Column>
+              <Column Name="Reference" DataType="DFe.Classes.Assinatura.Reference, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="URI" DataType="System.String"/>
+                <Column Name="DigestMethod" DataType="DFe.Classes.Assinatura.DigestMethod, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                  <Column Name="Algorithm" DataType="System.String"/>
+                </Column>
+                <Column Name="DigestValue" DataType="System.String"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource13" Alias="Transforms" Enabled="false" DataType="System.Collections.Generic.List`1[[DFe.Classes.Assinatura.Transform, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null]]" PropName="Transforms"/>
+              </Column>
+            </Column>
+            <Column Name="SignatureValue" DataType="System.String"/>
+            <Column Name="KeyInfo" DataType="DFe.Classes.Assinatura.KeyInfo, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+              <Column Name="X509Data" DataType="DFe.Classes.Assinatura.X509Data, DFe.Classes, Version=1.0.0.747, Culture=neutral, PublicKeyToken=null">
+                <Column Name="X509Certificate" DataType="System.String"/>
+              </Column>
+            </Column>
+          </Column>
+          <Column Name="ProxyccMsg" DataType="System.String"/>
+          <Column Name="cMsg" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="xMsg" DataType="System.String"/>
+        </Column>
+      </Column>
+    </BusinessObjectDataSource>
+    <Parameter Name="NfceDetalheVendaContigencia" DataType="CiafDFe.NfceDetalheVendaContigencia, CiafDFe, Version=1.6.3.0, Culture=neutral, PublicKeyToken=null"/>
+    <Parameter Name="NfceDetalheVendaNormal" DataType="CiafDFe.NfceDetalheVendaNormal, CiafDFe, Version=1.6.3.0, Culture=neutral, PublicKeyToken=null"/>
+    <Parameter Name="NfceImprimeDescontoItem" DataType="System.Boolean"/>
+    <Parameter Name="NfceModoImpressao" DataType="CiafDFe.NfceModoImpressao, CiafDFe, Version=1.6.3.0, Culture=neutral, PublicKeyToken=null"/>
+    <Parameter Name="NfceCancelado" DataType="System.Boolean"/>
+    <Parameter Name="NfceLayoutQrCode" DataType="CiafDFe.NfceLayoutQrCode, CiafDFe, Version=1.6.3.0, Culture=neutral, PublicKeyToken=null" Description="Layuout do QRCode (Normal ou Lateral)"/>
+    <Total Name="QtdeItens" Expression="[NFCe.NFe.infNFe.det.prod.qCom]" Evaluator="dbProdutosDuasLinhas"/>
+    <Total Name="TotalPagamentos" Expression="[NFCe.NFe.infNFe.pag.vPag]" Evaluator="dbPagamento"/>
+    <Total Name="TotalDetPagamentos" Expression="[NFCe.NFe.infNFe.pag.detPag.vPag]" Evaluator="dbDetPagamento"/>
+  </Dictionary>
+  <ReportPage Name="PgNfce" PaperWidth="79" LeftMargin="4.5" TopMargin="0" RightMargin="4.5" BottomMargin="1" FirstPageSource="15" OtherPagesSource="15" StartPageEvent="PgNfce_StartPage">
+    <ReportTitleBand Name="rtbTitulo" Width="264.6" Height="68.8" BeforePrintEvent="rtbTitulo_BeforePrint" AfterPrintEvent="rtbTitulo_AfterPrint">
+      <PictureObject Name="poEmitLogo" Top="3.78" Width="264" Height="65" Image="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"/>
+    </ReportTitleBand>
+    <PageHeaderBand Name="phbEmitente" Top="70.4" Width="264.6" Height="142.83" PrintOn="FirstPage, SinglePage" AfterPrintEvent="phbEmitente_AfterPrint">
+      <TextObject Name="Text12" Top="4.26" Width="264.6" Height="13.23" ShiftMode="WhenOverlapped" Text="[NFCe.NFe.infNFe.emit.xFant]" Padding="2, 1, 2, 1" HorzAlign="Center" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <TextObject Name="Memo2" Top="20.38" Width="264.6" Height="13.23" ShiftMode="WhenOverlapped" Text="[NFCe.NFe.infNFe.emit.xNome]" Padding="2, 1, 2, 1" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="txtEmitCnpj" Top="34.39" Width="140" Height="13.23" ShiftMode="WhenOverlapped" BeforePrintEvent="txtEmitCnpj_BeforePrint" Text="CNPJ: [NFCe.NFe.infNFe.emit.CNPJ]" Padding="2, 1, 2, 1" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="Text14" Left="150" Top="34.39" Width="110" Height="13.23" ShiftMode="WhenOverlapped" Text="IE: [NFCe.NFe.infNFe.emit.IE]" Padding="2, 1, 2, 1" HorzAlign="Right" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="txtEmitIm" Left="111.4" Top="34.39" Width="73.71" Height="13.23" ShiftMode="WhenOverlapped" Text="[IIf([NFCe.NFe.infNFe.emit.IM] != &quot;&quot;, &quot;IM: &quot; + [NFCe.NFe.infNFe.emit.IM], &quot;&quot;)]" Padding="2, 1, 2, 1" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="Text15" Top="49.62" Width="264.6" Height="36.46" Border.Lines="Bottom" Border.Width="0.5" CanGrow="true" CanShrink="true" ShiftMode="WhenOverlapped" Text="End.: [NFCe.NFe.infNFe.emit.enderEmit.xLgr], [NFCe.NFe.infNFe.emit.enderEmit.nro]&#13;&#10;Bairro: [NFCe.NFe.infNFe.emit.enderEmit.xBairro]&#13;&#10;[NFCe.NFe.infNFe.emit.enderEmit.xMun]/[NFCe.NFe.infNFe.emit.enderEmit.ProxyUF] - [Format(&quot;{0:00000-000}&quot;, ToInt32( [NFCe.NFe.infNFe.emit.enderEmit.CEP] ) )]" Padding="2, 1, 2, 1" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="Memo9" Top="88.08" Width="264.6" Height="28.35" ShiftMode="WhenOverlapped" Text="DANFE NFC-e - Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 9pt, style=Bold"/>
+      <TextObject Name="Memo37" Top="116.43" Width="264.6" Height="15.12" ShiftMode="WhenOverlapped" Text="Não permite aproveitamento de crédito do ICMS" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+    </PageHeaderBand>
+    <ColumnHeaderBand Name="phbCancelado" Top="214.83" Width="264.6" Height="16.9" Visible="false">
+      <TextObject Name="lblCancelado" Top="1" Width="264.6" Height="15.12" Fill.Color="Gray" ShiftMode="WhenOverlapped" Text="DOCUMENTO CANCELADO" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 9.749999pt, style=Bold" TextFill.Color="White"/>
+    </ColumnHeaderBand>
+    <GroupHeaderBand Name="ghbProdutosUmaLinha" Top="233.33" Width="264.6" Height="13.99" Visible="false" BeforePrintEvent="ghbProdutosUmaLinha_BeforePrint" AfterPrintEvent="ghbProdutosUmaLinha_AfterPrint" Condition="[NFCe.protNFe.infProt.chNFe]">
+      <ShapeObject Name="Shape2" Width="264.6" Height="13.99" Border.Width="0" Fill.Color="WhiteSmoke"/>
+      <TextObject Name="Text31" Top="1.13" Width="37.8" Height="11.34" Text="Código" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text32" Left="39.58" Top="1.13" Width="60.48" Height="11.34" Text="Descrição" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text33" Left="102.06" Top="1.13" Width="47.25" Height="11.34" Text="Qtd Un" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text34" Left="160.08" Top="1.13" Width="37.8" Height="11.34" Text="Vl Unit" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text35" Left="209.66" Top="1.13" Width="52.92" Height="11.34" Text="Valor Total" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text36" Left="151.09" Top="1.13" Width="7.56" Height="11.34" Text="x" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <TextObject Name="Text37" Left="200.34" Top="1.13" Width="7.56" Height="11.34" Text="=" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <DataBand Name="dbProdutosUmaLinha" Top="248.92" Width="264.6" Height="15.12" Visible="false" Border.Lines="Bottom" BeforePrintEvent="dbProdutosUmaLinha_BeforePrint" AfterPrintEvent="dbProdutosUmaLinha_AfterPrint" DataSource="det">
+        <TextObject Name="Text26" Top="1" Width="37.8" Height="13.23" Text="[NFCe.NFe.infNFe.det.prod.cProd]" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+        <TextObject Name="Text27" Left="39.69" Top="1" Width="60.48" Height="13.23" Text="[Substring(PadRight([NFCe.NFe.infNFe.det.prod.xProd], 13), 0, 12)]" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+        <TextObject Name="Text28" Left="102.06" Top="1" Width="47.25" Height="13.23" Text="[Format(&quot;{0:#,##0.####}&quot;, [NFCe.NFe.infNFe.det.prod.qCom])] [NFCe.NFe.infNFe.det.prod.uCom]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold">
+          <Formats>
+            <GeneralFormat/>
+            <GeneralFormat/>
+          </Formats>
+        </TextObject>
+        <TextObject Name="txtProdutoUmaLinhaValorUnit" Left="159.89" Top="1" Width="37.8" Height="13.23" Text="[NFCe.NFe.infNFe.det.prod.vUnTrib]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="," Format.GroupSeparator="." Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+        <TextObject Name="txtProdutoUmaLinhaValorTotal" Left="209.79" Top="1" Width="53.3" Height="13.23" Text="[NFCe.NFe.infNFe.det.prod.vProd]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+        <ChildBand Name="cbDescontoItemUmaLinha" Top="265.64" Width="264.6" Height="15.12" Visible="false" Border.Lines="Bottom">
+          <TextObject Name="Text41" Left="-0.06" Top="1.13" Width="50.31" Height="13.23" Text="Desconto:" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 6.5pt, style=Bold"/>
+          <TextObject Name="Text42" Left="53.26" Top="1.13" Width="62.36" Height="13.23" Text="[NFCe.NFe.infNFe.det.prod.vDesc]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="," Format.GroupSeparator="." Format.NegativePattern="1" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+          <TextObject Name="txtProdutoUmaLinhaSubTotal" Left="191.25" Top="1.51" Width="71.82" Height="13.23" Text="[ [NFCe.NFe.infNFe.det.prod.vProd] - [NFCe.NFe.infNFe.det.prod.vDesc] ]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+        </ChildBand>
+        <Sort>
+          <Sort Expression="[NFCe.NFe.infNFe.det.nItem]"/>
+        </Sort>
+      </DataBand>
+    </GroupHeaderBand>
+    <GroupHeaderBand Name="ghbProdutosDuasLinhas" Top="282.36" Width="264.6" Height="28.35" BeforePrintEvent="ghbProdutosDuasLinhas_BeforePrint" AfterPrintEvent="ghbProdutosDuasLinhas_AfterPrint" Condition="[NFCe.protNFe.infProt.chNFe]">
+      <ShapeObject Name="Shape1" Width="264.6" Height="28.35" Border.Width="0" Fill.Color="WhiteSmoke"/>
+      <TextObject Name="Text7" Top="2.46" Width="49.14" Height="11.34" Text="Código" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text8" Left="51.92" Top="1.89" Width="211.68" Height="11.34" Text="Descrição" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text9" Top="13.91" Width="92.61" Height="11.34" Text="Qtde Un" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text10" Left="107.16" Top="13.34" Width="71.82" Height="11.34" Text="Valor Unitário" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 7pt, style=Bold"/>
+      <TextObject Name="Text11" Left="190.76" Top="13.34" Width="71.82" Height="11.34" Text="Valor Total" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 8pt, style=Bold"/>
+      <TextObject Name="Text23" Left="96.39" Top="13.99" Width="7.56" Height="11.34" Text="x" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <TextObject Name="Text24" Left="181.44" Top="13.99" Width="7.56" Height="11.34" Text="=" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <DataBand Name="dbProdutosDuasLinhas" Top="312.31" Width="264.6" Height="46.36" Border.Lines="Bottom" Border.Width="0.25" BeforePrintEvent="dbProdutosDuasLinhas_BeforePrint" AfterPrintEvent="dbProdutosDuasLinhas_AfterPrint" DataSource="det">
+        <TextObject Name="Text1" Top="1" Width="49.14" Height="26.46" Text="[NFCe.NFe.infNFe.det.prod.cProd]" VertAlign="Center" Font="Open Sans Condensed Light, 7pt, style=Bold"/>
+        <TextObject Name="Text2" Left="51.79" Top="1" Width="210.55" Height="13.23" Text="[Substring(PadRight([NFCe.NFe.infNFe.det.prod.xProd], 49), 0, 48)]" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 7pt, style=Bold"/>
+        <TextObject Name="Text3" Top="12.72" Width="92.61" Height="13.23" Text="[Format(&quot;{0:#,##0.####}&quot;, [NFCe.NFe.infNFe.det.prod.qCom])] [NFCe.NFe.infNFe.det.prod.uCom]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 7pt, style=Bold">
+          <Formats>
+            <NumberFormat UseLocale="false" DecimalDigits="3" DecimalSeparator="," GroupSeparator="." NegativePattern="1"/>
+            <GeneralFormat/>
+          </Formats>
+        </TextObject>
+        <TextObject Name="txtProdutoDuasLinhasValorUnit" Left="106.97" Top="12.72" Width="71.82" Height="13.23" Text="[NFCe.NFe.infNFe.det.prod.vUnTrib]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="4" Format.DecimalSeparator="," Format.GroupSeparator="." Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 7pt, style=Bold"/>
+        <TextObject Name="txtProdutoDuasLinhasValorTotal" Left="190.89" Top="12.72" Width="71.82" Height="13.23" Text="[NFCe.NFe.infNFe.det.prod.vProd]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 7pt, style=Bold"/>
+        <ChildBand Name="cbDescontoItemDuasLinhas" Top="360.27" Width="264.6" Height="15.12" Visible="false" Border.Lines="Bottom">
+          <TextObject Name="Text38" Left="-0.04" Top="1.27" Width="48.31" Height="13.23" Text="Desconto:" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed, 7pt, style=Bold"/>
+          <TextObject Name="Text39" Left="53.28" Top="1.27" Width="62.36" Height="13.23" Text="[NFCe.NFe.infNFe.det.prod.vDesc]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="," Format.GroupSeparator="." Format.NegativePattern="1" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 7pt, style=Bold"/>
+          <TextObject Name="txtProdutoDuasLinhaSubTotal" Left="191.27" Top="1.27" Width="71.82" Height="13.23" Text="[ [NFCe.NFe.infNFe.det.prod.vProd] - [NFCe.NFe.infNFe.det.prod.vDesc] ]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 7pt, style=Bold"/>
+        </ChildBand>
+        <Sort>
+          <Sort Expression="[NFCe.NFe.infNFe.det.nItem]"/>
+        </Sort>
+      </DataBand>
+      <GroupFooterBand Name="gfbProdutos" Top="376.99" Width="264.6" Height="34.02" Border.Lines="Top" Border.Width="0.5" AfterPrintEvent="gfbProdutos_AfterPrint">
+        <TextObject Name="Text16" Top="3.78" Width="124.74" Height="11.34" Text="Qtde. total de itens" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+        <TextObject Name="Text17" Top="15.12" Width="124.74" Height="18.9" Text="Valor total R$" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt">
+          <Highlight>
+            <Condition Expression="(decimal)[NFCe.NFe.infNFe.total.ICMSTot.vDesc] == 0" Font="Open Sans Condensed Light, 11.9999981pt, style=Bold" ApplyTextFill="false" ApplyFont="true"/>
+          </Highlight>
+        </TextObject>
+        <TextObject Name="Text4" Left="143.64" Top="1.89" Width="120.96" Height="11.34" Text="[QtdeItens]" HorzAlign="Right" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+        <TextObject Name="txtValorTotal" Left="143.42" Top="15.12" Width="120.96" Height="18.9" BeforePrintEvent="txtValorTotal_BeforePrint" Text="[NFCe.NFe.infNFe.total.ICMSTot.vProd]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt">
+          <Highlight>
+            <Condition Expression="(decimal)[NFCe.NFe.infNFe.total.ICMSTot.vDesc] == 0" Font="Open Sans Condensed Light, 11.9999981pt, style=Bold" ApplyTextFill="false" ApplyFont="true"/>
+          </Highlight>
+        </TextObject>
+        <ChildBand Name="cbDesconto" Top="412.61" Width="264.6" Height="32.13" BeforePrintEvent="cbDesconto_BeforePrint">
+          <TextObject Name="Text43" Width="124.74" Height="12.1" Text="Desconto R$" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+          <TextObject Name="Text44" Left="143.64" Width="120.96" Height="12.1" Text="[NFCe.NFe.infNFe.total.ICMSTot.vDesc]" HorzAlign="Right" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+          <TextObject Name="Text45" Top="12.45" Width="124.74" Height="18.9" Text="Valor a Pagar R$" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 10pt, style=Bold"/>
+          <TextObject Name="Text46" Left="143.64" Top="12.45" Width="120.96" Height="18.9" Text="[NFCe.NFe.infNFe.total.ICMSTot.vNF]" HorzAlign="Right" VertAlign="Center" Font="Open Sans Condensed Light, 12pt, style=Bold"/>
+          <ChildBand Name="Child2" Top="446.34" Width="264.6" Height="12.1">
+            <TextObject Name="Text18" Width="124.74" Height="12.1" Text="FORMA PAGAMENTO" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+            <TextObject Name="Text20" Left="155.58" Width="109.62" Height="12.1" Text="VALOR PAGO R$" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+          </ChildBand>
+        </ChildBand>
+      </GroupFooterBand>
+    </GroupHeaderBand>
+    <DataBand Name="dbPagamento" Top="460.04" Width="264.6" Height="13.23" BeforePrintEvent="dbPagamento_BeforePrint" AfterPrintEvent="dbPagamento_AfterPrint" DataSource="pag">
+      <TextObject Name="txtDescPagto" Width="139.86" Height="13.23" BeforePrintEvent="txtDescPagto_BeforePrint" Text="[NFCe.NFe.infNFe.pag.tPag]" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="Text22" Left="154.98" Width="109.62" Height="13.23" Text="[NFCe.NFe.infNFe.pag.vPag]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+    </DataBand>
+    <DataBand Name="dbDetPagamento" Top="474.87" Width="264.6" Height="13.23" BeforePrintEvent="dbDetPagamento_BeforePrint" AfterPrintEvent="dbDetPagamento_AfterPrint" DataSource="detPag">
+      <TextObject Name="txtDescDetPagto" Width="139.86" Height="13.23" BeforePrintEvent="txtDescDetPagto_BeforePrint" Text="[NFCe.NFe.infNFe.pag.detPag.tPag]" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="Text6" Left="154.98" Width="109.62" Height="13.23" Text="[NFCe.NFe.infNFe.pag.detPag.vPag]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <DataFooterBand Name="dbTroco" Top="489.7" Width="264.6" Height="28.35" BeforePrintEvent="dbTroco_BeforePrint">
+        <TextObject Name="Text5" Left="202.23" Top="13.23" Width="62.37" Height="13.23" Text="[NFCe.NFe.infNFe.pag.vTroco]" HorzAlign="Right" VertAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+        <TextObject Name="Text13" Width="262.71" Height="13.23" Text="(TOTAL PAGO [FormatCurrency([TotalPagamentos]+[TotalDetPagamentos], 2)])" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+        <TextObject Name="Text47" Top="13.23" Width="196.56" Height="13.23" Text="TROCO R$:" VertAlign="Center" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      </DataFooterBand>
+    </DataBand>
+    <DataBand Name="dbTributos" Top="519.65" Width="264.6" Height="28.35" AfterPrintEvent="dbTributos_AfterPrint">
+      <TextObject Name="Memo23" Left="192.87" Width="71.81" Height="28.35" Text="[NFCe.NFe.infNFe.total.ICMSTot.vTotTrib]" Padding="2, 2, 2, 2" Format="Number" Format.UseLocale="true" HorzAlign="Right" WordWrap="false" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="Memo17" Width="190.87" Height="28.35" Text="Informação dos Tributos Totais Incidentes (Lei Federal 12.741 /2012)" Padding="2, 2, 2, 2" Font="Open Sans Condensed Light, 7pt"/>
+    </DataBand>
+    <DataBand Name="dbObservacao" Top="549.6" Width="264.6" Height="18.9" Border.Lines="Top" Border.Width="0.5" CanGrow="true" CanShrink="true" AfterPrintEvent="dbObservacao_AfterPrint">
+      <TextObject Name="txtObs" Width="264.6" Height="18.9" CanGrow="true" CanShrink="true" BeforePrintEvent="txtObs_BeforePrint" Text="[NFCe.NFe.infNFe.infAdic.infCpl]" Padding="2, 2, 2, 2" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+    </DataBand>
+    <DataBand Name="dbInfoFiscal" Top="570.1" Width="264.6" Height="15.12" CanGrow="true" CanShrink="true" AfterPrintEvent="dbInfoFiscal_AfterPrint">
+      <TextObject Name="memMsgFiscal" Top="1.22" Width="264.6" Height="13.23" CanGrow="true" CanShrink="true" BeforePrintEvent="memMsgFiscal_BeforePrint" Text="[NFCe.NFe.infNFe.infAdic.infAdFisco]" Padding="2, 1, 2, 1" HorzAlign="Center" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+    </DataBand>
+    <DataBand Name="dbNumeroSerieDh" Top="586.82" Width="264.6" Height="15.12" CanGrow="true" CanShrink="true" BeforePrintEvent="dbNumeroSerieDh_BeforePrint" AfterPrintEvent="dbNumeroSerieDh_AfterPrint">
+      <TextObject Name="txtDhEmissao" Width="264.6" Height="15.12" CanGrow="true" CanShrink="true" Text="Número: [PadLeft(ToString( [NFCe.NFe.infNFe.ide.nNF] ), 9, '0')] Série: [PadLeft(ToString( [NFCe.NFe.infNFe.ide.serie] ), 3, '0')] Emissão: [Substring(ToString( [NFCe.NFe.infNFe.ide.dhEmi]), 0, 19)] " Padding="2, 1, 2, 1" HorzAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 7pt"/>
+    </DataBand>
+    <DataBand Name="dbConsulta" Top="603.54" Width="264.6" Height="75.6" Border.Lines="Bottom" Border.Width="0.5" AfterPrintEvent="dbConsulta_AfterPrint">
+      <TextObject Name="Memo3" Top="15.77" Width="264.6" Height="13.23" Border.Lines="Top" Border.Width="0.5" Text="Consulte pela chave de acesso em:" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="Memo1" Top="44.34" Width="264.6" Height="11.34" Text="CHAVE DE ACESSO" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <TextObject Name="memChaveNfe" Top="57.14" Width="400.6" Height="15.12" BeforePrintEvent="memChaveNfe_BeforePrint" Text="[Substring([NFCe.NFe.infNFe.Id],3)]" Padding="2, 1, 2, 1" VertAlign="Center" Font="Open Sans Condensed Light, 6.5pt, style=Bold"/>
+      <TextObject Name="txtDescVia" Left="0.38" Width="264.6" Height="15.12" BeforePrintEvent="txtDhEmissao_BeforePrint" Text="[CopyName#]" Padding="2, 1, 2, 1" HorzAlign="Center" WordWrap="false" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <TextObject Name="txtUrl" Top="29.35" Width="264.6" Height="13.23" CanGrow="true" CanShrink="true" Text="http://hnfce.fazenda.mg.gov.br/portalnfce" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 6.5pt"/>
+    </DataBand>
+    <DataBand Name="dbDestinatario" Top="680.74" Width="264.6" Height="68.03" Border.Lines="Bottom" Border.Width="0.5" CanGrow="true" CanShrink="true" BeforePrintEvent="Destinatario_BeforePrint" AfterPrintEvent="dbDestinatario_AfterPrint">
+      <TextObject Name="txtConsumidor" Top="1.78" Width="264.6" Height="16.25" Text="CONSUMIDOR NÃO IDENTIFICADO" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Bottom" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <TextObject Name="txtDestNome" Top="20.41" Width="264.6" Height="17.01" CanGrow="true" CanShrink="true" Padding="5, 1, 5, 1" HorzAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="txtDestEndereco" Top="39.69" Width="264.6" Height="26.46" Visible="false" CanGrow="true" CanShrink="true" Padding="5, 1, 5, 1" HorzAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+    </DataBand>
+    <DataBand Name="dbQrCodeNormal" Top="750.37" Width="264.6" Height="170.36" BeforePrintEvent="dbQrCodeNormal_BeforePrint" AfterPrintEvent="dbQrCode_AfterPrint">
+      <TextObject Name="Memo4" Top="2.26" Width="264.6" Height="15.12" Text="Consulta via leitor de QR Code" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+      <BarcodeObject Name="bcoQrCode" Left="56.8" Top="18.1" Width="151.2" Height="151.2" AutoSize="false" Text="https://nfce.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml?p=31190603054280000109650010000000431030542808|2|2|1|51a01b97fc0ad4c1d880c58d0c9c3a7f2f6c83e0" ShowText="false" AllowExpressions="true" Barcode="QR Code" Barcode.ErrorCorrection="L" Barcode.Encoding="UTF8" Barcode.QuietZone="true"/>
+    </DataBand>
+    <DataBand Name="dbQrCodeLateral" Top="922.33" Width="264.6" Height="119.07" BeforePrintEvent="dbQrCodeLateral_BeforePrint" AfterPrintEvent="dbQrCodeLateral_AfterPrint">
+      <TextObject Name="txtConsumidor2" Left="103.95" Width="160.65" Height="15.12" Text="CONSUMIDOR NÃO IDENTIFICADO" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Bottom" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+      <TextObject Name="Text49" Width="100.17" Height="15.12" Text="Consulta via leitor de QR Code" Padding="2, 1, 2, 1" VertAlign="Bottom" Font="Open Sans Condensed Light, 7pt"/>
+      <BarcodeObject Name="bcoQrCodeLateral" Top="17.1" Width="94.5" Height="94.5" AutoSize="false" Text="https://nfce.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml?p=31190603054280000109650010000000431030542808|2|2|1|51a01b97fc0ad4c1d880c58d0c9c3a7f2f6c83e0" ShowText="false" AllowExpressions="true" Barcode="QR Code" Barcode.ErrorCorrection="L" Barcode.Encoding="UTF8" Barcode.QuietZone="true"/>
+      <TextObject Name="txtDestNome2" Left="94.5" Top="15.9" Width="170.1" Height="13.23" CanGrow="true" CanShrink="true" BeforePrintEvent="txtDestNome_BeforePrint" Padding="1, 1, 2, 1" Font="Open Sans Condensed Light, 7pt"/>
+      <TextObject Name="txtDestEndereco2" Left="94.5" Top="30.35" Width="170.1" Height="45.36" Visible="false" CanGrow="true" CanShrink="true" Padding="1, 1, 2, 1" Font="Open Sans Condensed Light, 7pt"/>
+      <TextObject Name="txtDhEmissao2" Left="94.5" Top="78.05" Width="170.1" Height="26.46" CanGrow="true" CanShrink="true" Text="Número: [PadLeft(ToString( [NFCe.NFe.infNFe.ide.nNF] ), 9, '0')] Série: [PadLeft(ToString( [NFCe.NFe.infNFe.ide.serie] ), 3, '0')]&#13;&#10;Emissão: [Substring(ToString( [NFCe.NFe.infNFe.ide.dhEmi]), 0, 19)]" Padding="1, 1, 2, 1" Font="Open Sans Condensed Light, 8pt, style=Bold"/>
+    </DataBand>
+    <DataBand Name="dbProtocolo" Top="1043" Width="264.6" Height="45.03" BeforePrintEvent="dbProtocolo_BeforePrint" AfterPrintEvent="dbProtocolo_AfterPrint">
+      <TextObject Name="txtProtocoloAutorizacao" Width="264.6" Height="27.14" Text="Protocolo de Autorização&#13;&#10;[NFCe.protNFe.infProt.nProt] [NFCe.protNFe.infProt.dhRecbto]" Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+      <TextObject Name="txtsoftware" Top="31.8" Width="254.6" Height="13.23" Border.Lines="Top" Border.Width="0.5" Text="Emitindo utilizando CIAF Soluções em Software " Padding="2, 1, 2, 1" HorzAlign="Center" VertAlign="Center" Font="Open Sans Condensed Light, 8pt"/>
+    </DataBand>
+  </ReportPage>
+</Report>

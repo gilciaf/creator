@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# CA1820: Test for empty strings using string length
+dotnet_diagnostic.CA1820.severity = none
+
+# CA1031: Do not catch general exception types
+dotnet_diagnostic.CA1031.severity = none

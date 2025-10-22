@@ -1,0 +1,85 @@
+﻿<Application x:Class="nfecreator.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:nfecreator"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+             StartupUri="MainWindow.xaml" >
+    <Application.Resources>
+
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--  MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive!  -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Themes/WindowCommands.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Themes/WindowButtonCommands.xaml" />
+                <!--  MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive!  -->
+                <!--  Theme setting  -->
+                <ResourceDictionary Source="/Styles/Color.xaml" />
+                <ResourceDictionary Source="/Styles/ThemeCiaf.xaml" />
+               
+                <ResourceDictionary Source="/Styles/Button.xaml" />
+                <ResourceDictionary Source="/Styles/Tabcontrol.xaml" />
+                <ResourceDictionary Source="/Styles/Textbox.xaml" />
+                <ResourceDictionary Source="/Styles/Combobox.xaml" />
+                <ResourceDictionary Source="/Styles/PasswordBox.xaml" />
+                <ResourceDictionary Source="/Styles/Windows.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style BasedOn="{StaticResource MahApps.Styles.CustomValidationPopup}" TargetType="{x:Type mah:CustomValidationPopup}">
+                <Setter Property="CloseOnMouseLeftButtonDown" Value="False" />
+                <Setter Property="ShowValidationErrorOnMouseOver" Value="False" />
+            </Style>
+
+            <Style x:Key="MahApps.Styles.MetroHeader.Horizontal" TargetType="mah:MetroHeader">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="mah:MetroHeader">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="HeaderGroup" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Column="0" Background="{TemplateBinding mah:HeaderedControlHelper.HeaderBackground}">
+                                    <mah:ContentControlEx x:Name="PART_Header"
+                                                          Margin="{TemplateBinding mah:HeaderedControlHelper.HeaderMargin}"
+                                                          HorizontalAlignment="{TemplateBinding mah:HeaderedControlHelper.HeaderHorizontalContentAlignment}"
+                                                          VerticalAlignment="{TemplateBinding mah:HeaderedControlHelper.HeaderVerticalContentAlignment}"
+                                                          Content="{TemplateBinding Header}"
+                                                          ContentCharacterCasing="{TemplateBinding mah:ControlsHelper.ContentCharacterCasing}"
+                                                          ContentStringFormat="{TemplateBinding HeaderStringFormat}"
+                                                          ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                                          ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                                          FontFamily="{TemplateBinding mah:HeaderedControlHelper.HeaderFontFamily}"
+                                                          FontSize="{TemplateBinding mah:HeaderedControlHelper.HeaderFontSize}"
+                                                          FontStretch="{TemplateBinding mah:HeaderedControlHelper.HeaderFontStretch}"
+                                                          FontWeight="{TemplateBinding mah:HeaderedControlHelper.HeaderFontWeight}"
+                                                          Foreground="{TemplateBinding mah:HeaderedControlHelper.HeaderForeground}"
+                                                          IsTabStop="False"
+                                                          RecognizesAccessKey="{TemplateBinding mah:ControlsHelper.RecognizesAccessKey}"
+                                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                </Grid>
+                                <Grid Grid.Column="1" Background="{TemplateBinding Background}">
+                                    <ContentPresenter x:Name="PART_Content"
+                                                      Margin="{TemplateBinding Padding}"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                      ContentSource="Content"
+                                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                </Grid>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="mah:HeaderedControlHelper.HeaderMargin" Value="0 0 4 0" />
+                <Setter Property="mah:HeaderedControlHelper.HeaderVerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="MahApps.Styles.ColorPalette.ColorPickerDropDown"
+                   BasedOn="{StaticResource MahApps.Styles.ColorPalette}"
+                   TargetType="{x:Type mah:ColorPalette}">
+                <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal" />
+            </Style>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

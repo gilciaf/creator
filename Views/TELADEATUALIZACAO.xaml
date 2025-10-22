@@ -1,0 +1,32 @@
+﻿<mah:MetroWindow
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        x:Class="nfecreator.TELADEATUALIZACAO"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore"
+        xmlns:local="clr-namespace:nfecreator"
+        Title="Download - "
+        mc:Ignorable="d"
+        Style="{StaticResource MeuMetroWindow}"    
+        ResizeMode="NoResize"
+        Height="115.963" Width="435"
+         SizeToContent="Height" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo />
+    </Window.TaskbarItemInfo>
+    <StackPanel Name="Panel" Orientation="Vertical" VerticalAlignment="Top" Margin="5"
+                input:FocusManager.FocusedElement="{Binding ElementName=TxtValor}" >
+        <TextBlock x:Name="TxturlAddress" Height="23" Margin="5" Visibility="Collapsed" TextWrapping="NoWrap" Text="Url" KeyUp="TxtValor_KeyUp" />
+        <TextBlock Name="TxtLocalion" Height="23" Margin="5" Visibility="Collapsed"  TextWrapping="NoWrap" Text="Pasta Local" KeyUp="TxtValor_KeyUp" />
+        <ProgressBar Name="progressBar" Margin="5"  Height="23"  />
+        <Grid Name="Grid" Height="39" Margin="5">
+            <TextBlock Name="TxtDownloaded"  TextWrapping="Wrap" Text="Tamanho:" KeyUp="TxtValor_KeyUp" Margin="0,0,260,7" />
+            <TextBlock Name="TxtVelocidade"  TextWrapping="Wrap" Text="Velocidade:" KeyUp="TxtValor_KeyUp" Margin="152,0,100,21" />
+            <TextBlock Name="TxtPerc"  TextWrapping="Wrap" Text="%" KeyUp="TxtValor_KeyUp" Margin="152,23,100,2" />
+            <Button x:Name="BtnCancelar" Style="{StaticResource CadastroButton}" Foreground="White" Content="Cancelar" HorizontalAlignment="Right" Margin="0"
+                    VerticalAlignment="Top" Width="90" Click="BtnCancelar_Click" Height="32" />
+        </Grid>
+    </StackPanel>
+</mah:MetroWindow>
