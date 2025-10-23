@@ -44,6 +44,9 @@ using System.Reflection.Emit;
 using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado;
 using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs;
 using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.Tipos;
+using NFe.Classes.Informacoes.Total.IbsCbs;
+using NFe.Classes.Informacoes.Total.IbsCbs.Cbs;
+using NFe.Classes.Informacoes.Total.IbsCbs.Monofasica;
 
 namespace nfecreator
 {
@@ -2617,9 +2620,8 @@ namespace nfecreator
                 vendanfe.UpdateValorNF();
                 icmsTot.vNF = vendanfe.Vnf;
 
-
             }
-
+             
             //icmsTot.vNF =
             //  icmsTot.vProd
             //  - icmsTot.vDesc
@@ -2651,10 +2653,25 @@ namespace nfecreator
                 MinhaNotificacao.NotificarErro("RETORNO SEFAZ ", "Regra de validação que rege sobre o Total da NF-e. ");
             }
 
+            var ibscbsTot = new IBSCBSTot();
+            ibscbsTot.vBCIBSCBS = vendanfe.VtotBcIbscbs;
+            ibscbsTot.gCBS = new gCBSTotal();
+            ibscbsTot.gCBS.vDif = vendanfe.VtotDifCbs;
+            ibscbsTot.gCBS.vDevTrib = vendanfe.VtotDevTribCbs;
+            ibscbsTot.gCBS.vCredPres = vendanfe.VtotCredPres;
+            ibscbsTot.gCBS.vCredPresCondSus = vendanfe.VtotCredPres;
+            ibscbsTot.gMono = new gMono();
+            ibscbsTot.gMono.vIBSMono = vendanfe.VtotIbsMono;
+            ibscbsTot.gMono.vCBSMono = vendanfe.VtotCbsMono;
+            ibscbsTot.gMono.vIBSMonoReten = vendanfe.VtotIbsMono;
+            ibscbsTot.gMono.vCBSMonoReten = vendanfe.VtotCbsMono;
+            ibscbsTot.gMono.vIBSMonoRet = vendanfe.VtotIbsMonoRet;
+            ibscbsTot.gMono.vCBSMonoRet = vendanfe.VtotCbsMonoRet;
+            
             var t = new total
             {
-                ICMSTot = icmsTot
-
+                ICMSTot = icmsTot,
+                IBSCBSTot = ibscbsTot
             };
             return t;
         }

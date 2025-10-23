@@ -2,8 +2,8 @@
   <CfgServico>
     <Certificado>
       <TipoCertificado>A1Arquivo</TipoCertificado>
-      <Arquivo>C:\Certificado\17245769_TESCHE_E_VASCONCELOS_SERVICOS_E_INFORMATICA_LTDA03054280000109.p12</Arquivo>
-      <Senha>381419</Senha>
+      <Arquivo>C:\Certificado\173064379_ALONSO_TECH_SOLUCOES_EM_SOFTWARE_LTDA_03054280000109.pfx</Arquivo>
+      <Senha>alonso</Senha>
       <ManterDadosEmCache>false</ManterDadosEmCache>
       <SignatureMethodSignedXml>http://www.w3.org/2000/09/xmldsig#rsa-sha1</SignatureMethodSignedXml>
       <DigestMethodReference>http://www.w3.org/2000/09/xmldsig#sha1</DigestMethodReference>

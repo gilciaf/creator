@@ -58,7 +58,7 @@ namespace nfecreator
                     texto = row["texto"].ToString().Trim();
                     serie = Convert.ToInt32(row["serie"].ToString().Trim());
                     //chavea = row["chavea"].ToString().Trim();
-
+                    Console.WriteLine(serie + " - serie");
                     protocolo = row["protocolo"].ToString().Trim();
                     
 

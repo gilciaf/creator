@@ -144,7 +144,32 @@ namespace nfecreator
         string ru_cpfcnpj;
         string ru_ieprod;
         string ru_ufprod;
-
+        
+        // REFORMA TRIBUTÁRIA
+        string vtot_is;
+        
+        decimal vtot_bc_ibscbs;
+        
+        string vtot_uf_dif;
+        string vtot_uf_dev_trib;
+        string vtot_uf_ibs;
+        
+        string vtot_mun_dif;
+        string vtot_mun_dev_trib;
+        string vtot_mun_ibs;
+        
+        Decimal vtot_dif_cbs;
+        Decimal vtot_dev_trib_cbs;
+        string vtot_cbs;
+        decimal vtot_cred_pres;
+        string vtot_cred_pres_cond_sus;
+        
+        decimal vtot_ibs_mono;
+        decimal vtot_cbs_mono;
+        decimal vtot_ibs_mono_reten;
+        decimal vtot_cbs_mono_reten;
+        decimal vtot_ibs_mono_ret;
+        decimal vtot_cbs_mono_ret;
 
 
         public int Id_vendanfe { get => id_vendanfe; set => id_vendanfe = value; }
@@ -271,6 +296,119 @@ namespace nfecreator
         public string IM1 { get => im; set => im = value; }
         public string Im { get => im; set => im = value; }
 
+        public string VtotIs
+        {
+            get => vtot_is;
+            set => vtot_is = value;
+        }
+
+        public decimal VtotBcIbscbs
+        {
+            get => vtot_bc_ibscbs;
+            set => vtot_bc_ibscbs = value;
+        }
+
+        public string VtotUfDif
+        {
+            get => vtot_uf_dif;
+            set => vtot_uf_dif = value;
+        }
+
+        public string VtotUfDevTrib
+        {
+            get => vtot_uf_dev_trib;
+            set => vtot_uf_dev_trib = value;
+        }
+
+        public string VtotUfIbs
+        {
+            get => vtot_uf_ibs;
+            set => vtot_uf_ibs = value;
+        }
+
+        public string VtotMunDif
+        {
+            get => vtot_mun_dif;
+            set => vtot_mun_dif = value;
+        }
+
+        public string VtotMunDevTrib
+        {
+            get => vtot_mun_dev_trib;
+            set => vtot_mun_dev_trib = value;
+        }
+
+        public string VtotMunIbs
+        {
+            get => vtot_mun_ibs;
+            set => vtot_mun_ibs = value;
+        }
+
+        public Decimal VtotDevTribCbs
+        {
+            get => vtot_dev_trib_cbs;
+            set => vtot_dev_trib_cbs = value;
+        }
+
+        public Decimal VtotDifCbs
+        {
+            get => vtot_dif_cbs;
+            set => vtot_dif_cbs = value;
+        }
+
+        public string VtotCbs
+        {
+            get => vtot_cbs;
+            set => vtot_cbs = value;
+        }
+
+        public decimal VtotCredPres
+        {
+            get => vtot_cred_pres;
+            set => vtot_cred_pres = value;
+        }
+
+        public string VtotCredPresCondSus
+        {
+            get => vtot_cred_pres_cond_sus;
+            set => vtot_cred_pres_cond_sus = value;
+        }
+
+        public decimal VtotIbsMono
+        {
+            get => vtot_ibs_mono;
+            set => vtot_ibs_mono = value;
+        }
+
+        public decimal VtotCbsMono
+        {
+            get => vtot_cbs_mono;
+            set => vtot_cbs_mono = value;
+        }
+
+        public decimal VtotIbsMonoReten
+        {
+            get => vtot_ibs_mono_reten;
+            set => vtot_ibs_mono_reten = value;
+        }
+
+        public decimal VtotCbsMonoReten
+        {
+            get => vtot_cbs_mono_reten;
+            set => vtot_cbs_mono_reten = value;
+        }
+
+        public decimal VtotIbsMonoRet
+        {
+            get => vtot_ibs_mono_ret;
+            set => vtot_ibs_mono_ret = value;
+        }
+
+        public decimal VtotCbsMonoRet
+        {
+            get => vtot_cbs_mono_ret;
+            set => vtot_cbs_mono_ret = value;
+        }
 
         public string ColorStatus
         {
@@ -335,7 +473,7 @@ namespace nfecreator
                     // = Convert.ToInt32(row["nmvendedor"].ToString().Trim());
                     id_cliente = row["codcliente"].ToString().Trim();
                     nomecliente =  row["nmcliente"].ToString().Trim();
-
+                   // Console.WriteLine(nomecliente + " - nome do cliente");
                     endereco = row["endereco"].ToString().Trim();
                     numero = row["numero"].ToString().Trim();
                     complemento = row["complemento"].ToString().Trim();
@@ -528,15 +666,34 @@ namespace nfecreator
 
                     //                datacontingencia = reader.GetDateTime("datacontingencia");
 
-
                     //                chavedeacesso = reader["chavedeacesso"].ToString();
                     //                protocolo = reader["protocolo"].ToString();
-
-
 
                     mod = row["refmod"].ToString().Trim();
                     nECF = row["refnecf"].ToString().Trim();
                     nCOO = row["refcoo"].ToString().Trim();
+                    
+                    // REFORMA TRIBUTÁRIA
+                    vtot_is = row["vtot_is"].ToString().Trim();
+                    vtot_bc_ibscbs = Convert.ToDecimal(row["vtot_bc_ibscbs"].ToString().Trim());
+                    vtot_uf_dif = row["vtot_uf_dif"].ToString().Trim();
+                    vtot_uf_dev_trib = row["vtot_uf_dev_trib"].ToString().Trim();
+                    vtot_uf_ibs = row["vtot_uf_ibs"].ToString().Trim();
+                    vtot_mun_dif = row["vtot_mun_dif"].ToString().Trim();
+                    vtot_mun_dev_trib = row["vtot_mun_dev_trib"].ToString().Trim();
+                    vtot_mun_ibs = row["vtot_mun_ibs"].ToString().Trim();
+                    vtot_dif_cbs = Convert.ToDecimal(row["vtot_dif_cbs"].ToString().Trim());
+                    vtot_dev_trib_cbs = Convert.ToDecimal(row["vtot_dev_trib_cbs"].ToString().Trim());
+                    vtot_cbs = row["vtot_cbs"].ToString().Trim();
+                    vtot_cred_pres = Convert.ToDecimal(row["vtot_cred_pres"].ToString().Trim());
+                    vtot_cred_pres_cond_sus = row["vtot_cred_pres_cond_sus"].ToString().Trim();
+                    vtot_ibs_mono = Convert.ToDecimal(row["vtot_ibs_mono"].ToString().Trim());
+                    vtot_cbs_mono = Convert.ToDecimal(row["vtot_cbs_mono"].ToString().Trim());
+                    vtot_ibs_mono_reten = Convert.ToDecimal(row["vtot_ibs_mono_reten"].ToString().Trim());
+                    vtot_cbs_mono_reten = Convert.ToDecimal(row["vtot_cbs_mono_reten"].ToString().Trim());
+                    vtot_ibs_mono_ret = Convert.ToDecimal(row["vtot_ibs_mono_ret"].ToString().Trim());
+                    vtot_cbs_mono_ret = Convert.ToDecimal(row["vtot_cbs_mono_ret"].ToString().Trim());
+
                 }
 
             }
