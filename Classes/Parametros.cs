@@ -177,10 +177,10 @@ namespace nfecreator
                         Crt = row["crt"].ToString();
                         Simples = row["simples"].ToString();
                         Responsavel = row["responsavel"].ToString().Trim();
-
+                       // int mySerie = 3;
                         if (row["campo94"].ToString().Trim() != "")
                             serie = Convert.ToInt32(row["campo94"].ToString().Trim());
-
+                       
                         if (row["nfceserie"].ToString().Trim() != "")
                             serienfce = Convert.ToInt32(row["nfceserie"].ToString().Trim());
 

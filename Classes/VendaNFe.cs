@@ -146,7 +146,7 @@ namespace nfecreator
         string ru_ufprod;
         
         // REFORMA TRIBUTÁRIA
-        string vtot_is;
+        decimal vtot_is;
         
         decimal vtot_bc_ibscbs;
         
@@ -158,8 +158,8 @@ namespace nfecreator
         string vtot_mun_dev_trib;
         string vtot_mun_ibs;
         
-        Decimal vtot_dif_cbs;
-        Decimal vtot_dev_trib_cbs;
+        decimal vtot_dif_cbs;
+        decimal vtot_dev_trib_cbs;
         string vtot_cbs;
         decimal vtot_cred_pres;
         string vtot_cred_pres_cond_sus;
@@ -170,7 +170,6 @@ namespace nfecreator
         decimal vtot_cbs_mono_reten;
         decimal vtot_ibs_mono_ret;
         decimal vtot_cbs_mono_ret;
-
 
         public int Id_vendanfe { get => id_vendanfe; set => id_vendanfe = value; }
         public int Nrvenda { get => nrvenda; set => nrvenda = value; }
@@ -296,7 +295,7 @@ namespace nfecreator
         public string IM1 { get => im; set => im = value; }
         public string Im { get => im; set => im = value; }
 
-        public string VtotIs
+        public decimal VtotIs
         {
             get => vtot_is;
             set => vtot_is = value;
@@ -453,14 +452,11 @@ namespace nfecreator
                 if (dt.Rows.Count > 0)
                 {
                     DataRow row = dt.Rows[0];
-
                     nrvenda = id;
-
                     if (row["serie"].ToString().Trim() != "")
                         serie = Convert.ToInt32(row["serie"].ToString().Trim());
                     else
                         Funcoes.Mensagem("Nota sem série, favor ajustar essa informação nos Parametros.", "SÉRIE DA NOTA", System.Windows.MessageBoxButton.OK);
-
                     dhEmi = Convert.ToDateTime(row["datae"].ToString().Trim());
                     dhEmi = Convert.ToDateTime(dhEmi.ToString("dd/MM/yyyy ") + row["horaensai"].ToString().Trim());
 
@@ -674,7 +670,7 @@ namespace nfecreator
                     nCOO = row["refcoo"].ToString().Trim();
                     
                     // REFORMA TRIBUTÁRIA
-                    vtot_is = row["vtot_is"].ToString().Trim();
+                    vtot_is = Convert.ToDecimal(row["vtot_is"].ToString().Trim());
                     vtot_bc_ibscbs = Convert.ToDecimal(row["vtot_bc_ibscbs"].ToString().Trim());
                     vtot_uf_dif = row["vtot_uf_dif"].ToString().Trim();
                     vtot_uf_dev_trib = row["vtot_uf_dev_trib"].ToString().Trim();

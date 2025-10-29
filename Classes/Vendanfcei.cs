@@ -156,7 +156,7 @@ namespace nfecreator
         // REFORMA TRIBUTÁRIA 
         string cst_is;
         string cclass_trib_is;
-        string v_bc_is;
+        decimal v_bc_is;
         string p_is_espec;
         string p_is;
         
@@ -346,7 +346,7 @@ namespace nfecreator
             set => cclass_trib_is = value;
         }
 
-        public string VBcIs
+        public decimal VBcIs
         {
             get => v_bc_is;
             set => v_bc_is = value;

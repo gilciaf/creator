@@ -43,6 +43,8 @@ using NFe.Utils.Tributacao.Estadual;
 using System.Reflection.Emit;
 using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado;
 using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs;
+using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs.InformacoesCbs;
+using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs.InformacoesIbs;
 using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.Tipos;
 using NFe.Classes.Informacoes.Total.IbsCbs;
 using NFe.Classes.Informacoes.Total.IbsCbs.Cbs;
@@ -55,6 +57,7 @@ namespace nfecreator
         private const string ArquivoConfiguracao = @"\configuracao.xml";
         private static ConfiguracaoApp _configuracoes;
         private static readonly string _path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        
         private CRT crtcliente;
         private ServicosNFe servicoNFe;
         private VendaNFe vendanfe;
@@ -63,7 +66,7 @@ namespace nfecreator
         private static void CarregarConfiguracao()
         {
             var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
+            Console.WriteLine(path + "  PATH --- ");
             try
             {
                 _configuracoes = !File.Exists(path + ArquivoConfiguracao)
@@ -169,6 +172,7 @@ namespace nfecreator
 
                     NFe.Classes.NFe _nfe = GetNf(vendanfe.Nrvenda, _configuracoes.CfgServico.ModeloDocumento, _configuracoes.CfgServico.VersaoNFeAutorizacao);
                     _nfe.Assina(); //não precisa validar aqui, pois o lote será validado em ServicosNFe.NFeAutorizacao
+                    
                     FuncoesFTP.GuardaXML(_nfe.ObterXmlString(), _path + @"\NFe_Autorizada\", _nfe.infNFe.Id.Replace("NFe", "") + "-procNFe");
                     var local = _path + @"\NFe_Autorizada\" + _nfe.infNFe.Id.Replace("NFe", "") + "-procNFe.xml";
 
@@ -476,11 +480,27 @@ namespace nfecreator
 
                 _nfe = GetNf(vendanfe.Nrvenda, ModeloDocumento.NFe, _configuracoes.CfgServico.VersaoNFeAutorizacao);
                 _nfe.Assina();
+                try
+                {
+                    var xmlPreview = _nfe.ObterXmlString();
+                    var previewPath = System.IO.Path.Combine(_path, "NFe_Preview");
+                    if (!Directory.Exists(previewPath)) Directory.CreateDirectory(previewPath);
+                    var file = System.IO.Path.Combine(previewPath, _nfe.infNFe.Id.Replace("NFe", "") + "-preview.xml");
+                    File.WriteAllText(file, xmlPreview);
+                }
+                catch
+                {
+                     /* apenas não interromper o fluxo se falhar o preview */
+                     Console.WriteLine("Erro ao salvar o preview da NFe");
+                }
                 _nfe.Valida();
 
                 servicoNFe = new ServicosNFe(_configuracoes.CfgServico);
                 vendanfea.Chave = _nfe.infNFe.Id.Replace("NFe", "");
                 vendanfe.Chavedeacesso = _nfe.infNFe.Id.Replace("NFe", "");
+                
+                if (_configuracoes.CfgServico.SalvarXmlServicos)
+                    FuncoesFTP.GuardaXML(_nfe.ObterXmlString(), _path + @"\", "VERIFICAR-" + _nfe.infNFe.Id + "-procNFe");
 
                 if (App.Parametro.Uf == "MT" || App.Parametro.Uf == "MS")
                 {
@@ -1922,8 +1942,10 @@ namespace nfecreator
             det det = new det();
             try
             {
+                
                 det = new det
-                {
+                {   
+                    
                     nItem = ivendanfe.Nritem,
                     prod = new prod
                     {
@@ -1958,6 +1980,7 @@ namespace nfecreator
                     {
                         vTotTrib = ivendanfe.Vtottrib,
                     }
+                    
                 };
 
                 //Parametros  de Olho no Imposto
@@ -2061,92 +2084,7 @@ namespace nfecreator
                         vICMSUFRemet = ivendanfe.Vicmsufremet,
                     };
                 }
-              
-                det.imposto.IS = new IS()
-                                  {
-                                      CSTIS = CSTIS.Is000,
-                                      cClassTribIS = "000000",
-                                      vBCIS = vendanfe.Vbc,
-                                      pIS = 5,
-                                      pISEspec = 2,
-                                      uTrib = ivendanfe.Utrib,
-                                      qTrib = ivendanfe.Qtrib,
-                                      vIS = vendanfe.Vbc * 5 / 100
-                                  };
-                                  det.imposto.IBSCBS = new IBSCBS()
-                                  {
-                                      CST = CST.Cst000,
-                                      cClassTrib = "000001",
-                                      gIBSCBS = new gIBSCBS()
-                                      {
-                                          vBC = vendanfe.Vbc,
-                                          gIBSUF =
-                                          {
-                                              pIBSUF = 2,
-                                              gDif = {
-                                                  pDif = 1,
-                                                  vDif = vendanfe.Vbc / 100
-                                               },
-                                              gDevTrib =
-                                              {
-                                                  vDevTrib = vendanfe.Vbc * 2 / 100
-                                              },
-                                              gRed =
-                                              {
-                                                  pRedAliq = 1,
-                                                  pAliqEfet = (vendanfe.Vbc * 2 / 100) / 100
-                                              },
-                                              vIBSUF = vendanfe.Vbc * 2 / 100
-                                          },
-                                          gIBSMun =
-                                          {
-                                              pIBSMun = 2,
-                                              gDif = {
-                                                  pDif = 1,
-                                                  vDif = vendanfe.Vbc  / 100
-                                              },
-                                              gDevTrib =
-                                              {
-                                                  vDevTrib = vendanfe.Vbc * 2 / 100
-                                              },
-                                              gRed =
-                                              {
-                                                  pRedAliq = 1,
-                                                  pAliqEfet = vendanfe.Vbc / 100   
-                                              },
-                                              vIBSMun = vendanfe.Vbc * 2 / 100
-                                          },
-                                          gCBS =
-                                          {
-                                              pCBS = new decimal(0.09),
-                                              gDif =
-                                              {
-                                                  pDif = 0,
-                                                  vDif = 0
-                                              },
-                                              gDevTrib =
-                                              {
-                                                  vDevTrib = 100
-                                              },
-                                              gRed =
-                                              {
-                                                  pRedAliq = 0,
-                                                  pAliqEfet = 0
-                                              }
-                                          },
-                                          gTribRegular =
-                                          {
-                                              CSTReg = CST.Cst000,
-                                              cClassTribReg = "000000",
-                                              pAliqEfetRegIBSUF = 1,
-                                              vTribRegIBSUF = vendanfe.Vbc * 2 / 100,
-                                              pAliqEfetRegIBSMun = 1,
-                                              vTribRegIBSMun = vendanfe.Vbc * 2 / 100,
-                                              pAliqEfetRegCBS = 0,
-                                              vTribRegCBS = vendanfe.Vbc * 2 / 100
-                                          }
-                                      }
-                                  }; 
+                
                 if (ivendanfe.Codigoanp != "" && ivendanfe.Codigoanp != "0")
                 {
                     comb comb = new comb()
@@ -2276,7 +2214,6 @@ namespace nfecreator
                         {
                             ivendanfe.Vipidevol = Convert.ToDecimal(vipidevol);
                             ivendanfe.UpdateVipidevol();
-
                         }
                         catch (Exception ex)
                         {
@@ -2311,7 +2248,102 @@ namespace nfecreator
                         },
                         pDevol = ivendanfe.Pdevol
                     };
-                }
+                } 
+                det.imposto.IS = new IS()
+                    {
+                        CSTIS = CSTIS.Is000,
+                        cClassTribIS = "000000",
+                        vBCIS = ivendanfe.VBcIs,
+                        pIS = ivendanfe.PIs,
+                        pISEspec = 2,
+                        uTrib = ivendanfe.Utrib,
+                        qTrib = ivendanfe.Qtrib,
+                        vIS = ivendanfe.VIs
+                    };
+
+                // Garantir que o objeto imposto esteja instanciado
+                if (det.imposto == null)
+                    det.imposto = new imposto();
+
+                // Instanciação segura de toda a árvore IBSCBS evitando NRE
+                det.imposto.IBSCBS = new IBSCBS
+                {
+                    CST = CST.Cst000,
+                    cClassTrib = "000001",
+                    gIBSCBS = new gIBSCBS
+                    {
+                        vBC = ivendanfe.VBcIbscbs,
+                        gIBSUF = new gIBSUF
+                        {
+                            pIBSUF = ivendanfe.PIbsUf,
+                            gDif = new gDif
+                            {
+                                pDif = ivendanfe.PDifUfIbs,
+                                vDif = ivendanfe.VDifUfIbs
+                            },
+                            gDevTrib = new gDevTrib
+                            {
+                                vDevTrib = ivendanfe.VDevTribUfIbs
+                            },
+                            gRed = new gRed
+                            {
+                                pRedAliq = ivendanfe.PRedAliqUfIbs,
+                                pAliqEfet = ivendanfe.PRedAliqEfetUfIbs
+                            },
+                            vIBSUF = ivendanfe.VIbsUf
+                        },
+                        gIBSMun = new gIBSMun
+                        {
+                            pIBSMun = ivendanfe.PIbsMun,
+                            gDif = new gDif
+                            {
+                                pDif = ivendanfe.PDifMun,
+                                vDif = ivendanfe.VDifMun
+                            },
+                            gDevTrib = new gDevTrib
+                            {
+                                vDevTrib = ivendanfe.VDevTribMun
+                            },
+                            gRed = new gRed
+                            {
+                                pRedAliq = ivendanfe.PRedAliqMun,
+                                pAliqEfet = ivendanfe.PRedAliqEfetMun
+                            },
+                            vIBSMun = ivendanfe.VIbsMun
+                        },
+                        vIBS = ivendanfe.VDifUfIbs + ivendanfe.VDifMun,
+                        gCBS = new gCBS
+                        {
+                            pCBS = ivendanfe.PCbs,
+                            gDif = new gDif
+                            {
+                                pDif = ivendanfe.PDifUfCbs,
+                                vDif = ivendanfe.VDifCbs
+                            },
+                            gDevTrib = new gDevTrib
+                            {
+                                vDevTrib = ivendanfe.VDevTribCbs
+                            },
+                            gRed = new gRed
+                            {
+                                pRedAliq = ivendanfe.PRedAliqCbs,
+                                pAliqEfet = ivendanfe.VRedAliqCbs
+                            },
+                            vCBS = ivendanfe.VCbs
+                        },
+                        gTribRegular = new gTribRegular
+                        {
+                            CSTReg = CST.Cst000,
+                            cClassTribReg = "000000",
+                            pAliqEfetRegIBSUF = ivendanfe.PAliqEfetRegIbsUf,
+                            vTribRegIBSUF = ivendanfe.VTribRegIbsUf,
+                            pAliqEfetRegIBSMun = ivendanfe.PAliqEfetRegIbsMun,
+                            vTribRegIBSMun = ivendanfe.VTribRegIbsMun,
+                            pAliqEfetRegCBS = ivendanfe.PAliqEfetRegCbs,
+                            vTribRegCBS = ivendanfe.VTribRegCbs
+                        }
+                    }
+                };
                  
                 return det;
             }
@@ -2653,6 +2685,9 @@ namespace nfecreator
                 MinhaNotificacao.NotificarErro("RETORNO SEFAZ ", "Regra de validação que rege sobre o Total da NF-e. ");
             }
 
+            var isTot  = new ISTot();
+            isTot.vIS = vendanfe.VtotIs;
+            
             var ibscbsTot = new IBSCBSTot();
             ibscbsTot.vBCIBSCBS = vendanfe.VtotBcIbscbs;
             ibscbsTot.gCBS = new gCBSTotal();
@@ -2670,7 +2705,8 @@ namespace nfecreator
             
             var t = new total
             {
-                ICMSTot = icmsTot,
+                ICMSTot = icmsTot, 
+                ISTot = isTot,
                 IBSCBSTot = ibscbsTot
             };
             return t;
