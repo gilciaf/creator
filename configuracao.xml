@@ -31,7 +31,8 @@
     <VersaoNfeDownloadNF>3.10</VersaoNfeDownloadNF>
     <VersaoNfceAministracaoCSC>4.00</VersaoNfceAministracaoCSC>
     <ProtocoloDeSeguranca>Tls12</ProtocoloDeSeguranca>
-      <DiretorioSchemas>C:\Users\Rosana Marques\Documents\GILVAN\CiafNFe\CiafNFe\bin\Debug\Schemas\</DiretorioSchemas>
+      <!--DiretorioSchemas>C:\Users\Rosana Marques\Documents\GILVAN\CiafNFe\CiafNFe\bin\Debug\Schemas\</DiretorioSchemas-->
+      <DiretorioSchemas>C:\Schemas\NFe4</DiretorioSchemas>
     <SalvarXmlServicos>false</SalvarXmlServicos>
     <DiretorioSalvarXml />
     <ValidarCertificadoDoServidor>false</ValidarCertificadoDoServidor>

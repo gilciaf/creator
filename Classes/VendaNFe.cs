@@ -150,13 +150,13 @@ namespace nfecreator
         
         decimal vtot_bc_ibscbs;
         
-        string vtot_uf_dif;
-        string vtot_uf_dev_trib;
-        string vtot_uf_ibs;
+        decimal vtot_uf_dif;
+        decimal vtot_uf_dev_trib;
+        decimal vtot_uf_ibs;
         
-        string vtot_mun_dif;
-        string vtot_mun_dev_trib;
-        string vtot_mun_ibs;
+        decimal vtot_mun_dif;
+        decimal vtot_mun_dev_trib;
+        decimal vtot_mun_ibs;
         
         decimal vtot_dif_cbs;
         decimal vtot_dev_trib_cbs;
@@ -307,43 +307,43 @@ namespace nfecreator
             set => vtot_bc_ibscbs = value;
         }
 
-        public string VtotUfDif
+        public decimal VtotUfDif
         {
             get => vtot_uf_dif;
             set => vtot_uf_dif = value;
         }
 
-        public string VtotUfDevTrib
+        public decimal VtotUfDevTrib
         {
             get => vtot_uf_dev_trib;
             set => vtot_uf_dev_trib = value;
         }
 
-        public string VtotUfIbs
+        public decimal VtotUfIbs
         {
             get => vtot_uf_ibs;
             set => vtot_uf_ibs = value;
         }
 
-        public string VtotMunDif
+        public decimal VtotMunDif
         {
             get => vtot_mun_dif;
             set => vtot_mun_dif = value;
         }
 
-        public string VtotMunDevTrib
+        public decimal VtotMunDevTrib
         {
             get => vtot_mun_dev_trib;
             set => vtot_mun_dev_trib = value;
         }
 
-        public string VtotMunIbs
+        public decimal VtotMunIbs
         {
             get => vtot_mun_ibs;
             set => vtot_mun_ibs = value;
         }
 
-        public Decimal VtotDevTribCbs
+        public decimal VtotDevTribCbs
         {
             get => vtot_dev_trib_cbs;
             set => vtot_dev_trib_cbs = value;
@@ -672,12 +672,12 @@ namespace nfecreator
                     // REFORMA TRIBUTÁRIA
                     vtot_is = Convert.ToDecimal(row["vtot_is"].ToString().Trim());
                     vtot_bc_ibscbs = Convert.ToDecimal(row["vtot_bc_ibscbs"].ToString().Trim());
-                    vtot_uf_dif = row["vtot_uf_dif"].ToString().Trim();
-                    vtot_uf_dev_trib = row["vtot_uf_dev_trib"].ToString().Trim();
-                    vtot_uf_ibs = row["vtot_uf_ibs"].ToString().Trim();
-                    vtot_mun_dif = row["vtot_mun_dif"].ToString().Trim();
-                    vtot_mun_dev_trib = row["vtot_mun_dev_trib"].ToString().Trim();
-                    vtot_mun_ibs = row["vtot_mun_ibs"].ToString().Trim();
+                    vtot_uf_dif = Convert.ToDecimal(row["vtot_uf_dif"].ToString().Trim());
+                    vtot_uf_dev_trib = Convert.ToDecimal(row["vtot_uf_dev_trib"].ToString().Trim());
+                    vtot_uf_ibs = Convert.ToDecimal(row["vtot_uf_ibs"].ToString().Trim());
+                    vtot_mun_dif = Convert.ToDecimal(row["vtot_mun_dif"].ToString().Trim());
+                    vtot_mun_dev_trib = Convert.ToDecimal(row["vtot_mun_dev_trib"].ToString().Trim());
+                    vtot_mun_ibs = Convert.ToDecimal(row["vtot_mun_ibs"].ToString().Trim());
                     vtot_dif_cbs = Convert.ToDecimal(row["vtot_dif_cbs"].ToString().Trim());
                     vtot_dev_trib_cbs = Convert.ToDecimal(row["vtot_dev_trib_cbs"].ToString().Trim());
                     vtot_cbs = row["vtot_cbs"].ToString().Trim();

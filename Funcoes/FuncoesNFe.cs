@@ -48,7 +48,9 @@ using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs
 using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.Tipos;
 using NFe.Classes.Informacoes.Total.IbsCbs;
 using NFe.Classes.Informacoes.Total.IbsCbs.Cbs;
+using NFe.Classes.Informacoes.Total.IbsCbs.Ibs;
 using NFe.Classes.Informacoes.Total.IbsCbs.Monofasica;
+using nfecreator.Validation;
 
 namespace nfecreator
 {
@@ -480,19 +482,6 @@ namespace nfecreator
 
                 _nfe = GetNf(vendanfe.Nrvenda, ModeloDocumento.NFe, _configuracoes.CfgServico.VersaoNFeAutorizacao);
                 _nfe.Assina();
-                try
-                {
-                    var xmlPreview = _nfe.ObterXmlString();
-                    var previewPath = System.IO.Path.Combine(_path, "NFe_Preview");
-                    if (!Directory.Exists(previewPath)) Directory.CreateDirectory(previewPath);
-                    var file = System.IO.Path.Combine(previewPath, _nfe.infNFe.Id.Replace("NFe", "") + "-preview.xml");
-                    File.WriteAllText(file, xmlPreview);
-                }
-                catch
-                {
-                     /* apenas não interromper o fluxo se falhar o preview */
-                     Console.WriteLine("Erro ao salvar o preview da NFe");
-                }
                 _nfe.Valida();
 
                 servicoNFe = new ServicosNFe(_configuracoes.CfgServico);
@@ -507,7 +496,52 @@ namespace nfecreator
                     _nfe = new NFe.Classes.NFe().CarregarDeXmlString(Funcoes.RemoverAcentos(_nfe.ObterXmlString()));
                     _nfe.Assina();
                 }
+                
+                /*     try {
+                        var xmlPreview = _nfe.ObterXmlString();
+                        var previewPath = System.IO.Path.Combine(_path, "NFe_Preview");
+                        if (!Directory.Exists(previewPath)) Directory.CreateDirectory(previewPath);
+                        var file = System.IO.Path.Combine(previewPath, _nfe.infNFe.Id.Replace("NFe", "") + "-preview.xml");
+                        File.WriteAllText(file, xmlPreview);
 
+                        // Validate explicitly against isolated NFe 4.00 schemas if folder exists
+                        var schemaBase = @"C:\Schemas\NFe4";
+                        var rootSchema = Path.Combine(schemaBase, "enviNFe_v4.00.xsd");
+                        var logsDir = Path.Combine(_path, "logs");
+                        if (!Directory.Exists(logsDir)) Directory.CreateDirectory(logsDir);
+                        var logFile = Path.Combine(logsDir, _nfe.infNFe.Id.Replace("NFe", "") + "-schema-validation.log");
+                        try
+                        {
+                            if (Directory.Exists(schemaBase) && File.Exists(rootSchema))
+                            {
+                                var validation = NFeSchemaValidator.ValidateXmlString(xmlPreview, rootSchema, schemaBase);
+                                File.WriteAllText(logFile, validation.Log ?? string.Empty);
+                                if (!validation.Success)
+                                {
+                                    Funcoes.Mensagem("Falha na validação XSD isolada (NFe 4.00). Verifique o log: " + logFile,
+                                                     "Validação de Schema", MessageBoxButton.OK);
+                                    return null;
+                                }
+                            }
+                            else
+                            {
+                                // Log that the isolated schema folder/root is missing
+                                File.WriteAllText(logFile, "[SchemaValidation] Pasta ou XSD raiz não encontrados. Esperado: " + rootSchema);
+                            }
+                        }
+                        catch (Exception exValid)
+                        {
+                            File.WriteAllText(logFile, "[SchemaValidation] EXCEPTION ao validar: " + exValid);
+                            throw;
+                        }
+                    }
+                    catch
+                    {
+                         apenas não interromper o fluxo se falhar o preview 
+                     Console.WriteLine("Erro ao salvar o preview da NFe");
+                }  */
+           
+                
                 if (_configuracoes.CfgServico.SalvarXmlServicos)
                     FuncoesFTP.GuardaXML(_nfe.ObterXmlString(), _path + @"\", "VERIFICAR-" + _nfe.infNFe.Id + "-procNFe");
 
@@ -1942,11 +1976,9 @@ namespace nfecreator
             det det = new det();
             try
             {
-                
                 det = new det
-                {   
-                    
-                    nItem = ivendanfe.Nritem,
+                { 
+               nItem = ivendanfe.Nritem,
                     prod = new prod
                     {
                         cProd = ivendanfe.Codigob.Trim(),
@@ -2266,10 +2298,56 @@ namespace nfecreator
                     det.imposto = new imposto();
 
                 // Instanciação segura de toda a árvore IBSCBS evitando NRE
+                
+                var cstIbs = CST.Cst000;
+                switch ((ivendanfe.CstIbscbs ?? string.Empty).Trim())
+                {
+                    case "000":
+                        cstIbs = CST.Cst000;
+                        break;
+                    case "200":
+                        cstIbs = CST.Cst200;
+                        break;
+                    case "220":
+                        cstIbs = CST.Cst220;
+                        break;
+                    case "221":
+                        cstIbs = CST.Cst221;
+                        break;
+                    case "400":
+                        cstIbs = CST.Cst400;
+                        break;
+                    case "410":
+                        cstIbs = CST.Cst410;
+                        break;
+                    case "510":
+                        cstIbs = CST.Cst510;
+                        break;
+                    case "550":
+                        cstIbs = CST.Cst550;
+                        break;
+                    case "620":
+                        cstIbs = CST.Cst620;
+                        break;
+                    case "800":
+                        cstIbs = CST.Cst800;
+                        break;
+                    case "810":
+                        cstIbs = CST.Cst810;
+                        break;
+                    case "820":
+                        cstIbs = CST.Cst820;
+                        break;
+                    default:
+                        // Mantém padrão Cst000 se código não mapeado
+                        cstIbs = CST.Cst000;
+                        break;
+                }
+                
                 det.imposto.IBSCBS = new IBSCBS
                 {
-                    CST = CST.Cst000,
-                    cClassTrib = "000001",
+                    CST = cstIbs,
+                    cClassTrib = ivendanfe.CclassTribIbscbs ?? "000000",
                     gIBSCBS = new gIBSCBS
                     {
                         vBC = ivendanfe.VBcIbscbs,
@@ -2347,7 +2425,6 @@ namespace nfecreator
                  
                 return det;
             }
-
             catch (Exception ex)
             {
                 Funcoes.Mensagem(" Por gentileza, verificar as informações apresentada no cadastro do item da nota como CFOP, CST, ICMS entre outas informações." + Environment.NewLine +
@@ -2695,6 +2772,15 @@ namespace nfecreator
             ibscbsTot.gCBS.vDevTrib = vendanfe.VtotDevTribCbs;
             ibscbsTot.gCBS.vCredPres = vendanfe.VtotCredPres;
             ibscbsTot.gCBS.vCredPresCondSus = vendanfe.VtotCredPres;
+            ibscbsTot.gIBS = new gIBS();
+            ibscbsTot.gIBS.gIBSMun = new gIBSMunTotal();
+            ibscbsTot.gIBS.gIBSMun.vIBSMun = vendanfe.VtotMunIbs;
+            ibscbsTot.gIBS.gIBSMun.vDevTrib = vendanfe.VtotMunDevTrib;
+            ibscbsTot.gIBS.gIBSMun.vDif = vendanfe.VtotMunDif;
+            ibscbsTot.gIBS.gIBSUF = new gIBSUFTotal();
+            ibscbsTot.gIBS.gIBSUF.vDif = vendanfe.VtotUfDif;
+            ibscbsTot.gIBS.gIBSUF.vDevTrib = vendanfe.VtotUfDevTrib;
+            ibscbsTot.gIBS.gIBSUF.vIBSUF = vendanfe.VtotUfIbs;
             ibscbsTot.gMono = new gMono();
             ibscbsTot.gMono.vIBSMono = vendanfe.VtotIbsMono;
             ibscbsTot.gMono.vCBSMono = vendanfe.VtotCbsMono;

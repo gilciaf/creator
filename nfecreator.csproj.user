@@ -9,6 +9,9 @@
     <ErrorReportUrlHistory />
     <FallbackCulture>pt-BR</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
-    <ProjectView>ProjectFiles</ProjectView>
+    <ProjectView>ShowAllFiles</ProjectView>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartArguments>/IdKeySistema=b54bea0e-6e3c-4cf9-9f22-27a964ea3951 /Param00=31 /Autorizar</StartArguments>
   </PropertyGroup>
 </Project>
