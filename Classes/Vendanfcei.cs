@@ -10,7 +10,6 @@ namespace nfecreator
 {
     class VendaNFCeI
     {
-
         int id_vendanfcei;
         int id_vendanfce;
         string codigoproduto;
@@ -158,43 +157,49 @@ namespace nfecreator
         string cclass_trib_is;
         decimal v_bc_is;
         string p_is_espec;
-        string p_is;
+        decimal p_is;
         
         string cst_ibscbs;
         string cclass_trib_ibscbs;
         
-        string v_bc_ibscbs;
-        string p_ibs_uf;
-        string p_dif_uf_ibs;
-        string v_dif_uf_ibs;
-        string v_dev_trib_uf_ibs;
-        string p_red_aliq_uf_ibs;
-        string p_red_aliq_efet_uf_ibs;
-        string v_ibs_uf;
+        decimal v_bc_ibscbs;
+        decimal p_ibs_uf;
+        decimal p_dif_uf_ibs;
+        decimal v_dif_uf_ibs;
+        decimal v_dev_trib_uf_ibs;
+        decimal p_red_aliq_uf_ibs;
+        decimal p_red_aliq_efet_uf_ibs;
+        decimal v_ibs_uf;
         
-        string p_ibs_mun;
-        string p_dif_mun;
-        string v_dif_mun;
-        string v_dev_trib_mun;
-        string p_red_aliq_efet_mun;
-        string v_ibs_mun;
+        decimal p_ibs_mun;
+        decimal p_dif_mun;
+        decimal v_dif_mun;
+        decimal v_dev_trib_mun;
+        decimal p_red_aliq_efet_mun;
+        decimal v_ibs_mun;
         
-        string p_cbs;
+        decimal p_red_aliq_mun_ibs;
         
-        string p_dif_uf_cbs;
-        string v_dev_trib_cbs;
-        string p_red_aliq_cbs;
-        string v_red_aliq_cbs;
+        decimal p_cbs;
         
-        string v_cbs;
+        decimal v_dif_cbs;
+        decimal p_dif_uf_cbs;
+        decimal v_dev_trib_cbs;
+        decimal p_red_aliq_cbs;
+        decimal v_red_aliq_cbs;
+        
+        decimal v_cbs;
         
         string cst_reg;
         string cclass_trib_reg;
-        string p_aliq_efet_reg_ibs_uf;
-        string v_trib_reg_ibs_uf;
-        string v_trib_reg_ibs_mun;
-        string p_aliq_efet_reg_cbs;
-        string v_trib_reg_cbs;
+        decimal p_aliq_efet_reg_ibs_uf;
+        decimal p_aliq_efet_reg_ibs_mun;
+        decimal v_trib_reg_ibs_uf;
+        decimal v_trib_reg_ibs_mun;
+        decimal p_aliq_efet_reg_cbs;
+        decimal v_trib_reg_cbs;
+        
+        
         
         
         public int Id_vendanfcei { get => id_vendanfcei; set => id_vendanfcei = value; }
@@ -358,7 +363,7 @@ namespace nfecreator
             set => p_is_espec = value;
         }
 
-        public string PIs
+        public decimal PIs
         {
             get => p_is;
             set => p_is = value;
@@ -376,121 +381,131 @@ namespace nfecreator
             set => cclass_trib_ibscbs = value;
         }
 
-        public string VBcIbscbs
+        public decimal VBcIbscbs
         {
             get => v_bc_ibscbs;
             set => v_bc_ibscbs = value;
         }
 
-        public string PIbsUf
+        public decimal PIbsUf
         {
             get => p_ibs_uf;
             set => p_ibs_uf = value;
         }
 
-        public string PDifUfIbs
+        public decimal PDifUfIbs
         {
             get => p_dif_uf_ibs;
             set => p_dif_uf_ibs = value;
         }
 
-        public string VDifUfIbs
+        public decimal VDifUfIbs
         {
             get => v_dif_uf_ibs;
             set => v_dif_uf_ibs = value;
         }
 
-        public string VDevTribUfIbs
+        public decimal VDevTribUfIbs
         {
             get => v_dev_trib_uf_ibs;
             set => v_dev_trib_uf_ibs = value;
         }
 
-        public string PRedAliqUfIbs
+        public decimal PRedAliqUfIbs
         {
             get => p_red_aliq_uf_ibs;
             set => p_red_aliq_uf_ibs = value;
         }
 
-        public string PRedAliqEfetUfIbs
+        public decimal PRedAliqEfetUfIbs
         {
             get => p_red_aliq_efet_uf_ibs;
             set => p_red_aliq_efet_uf_ibs = value;
         }
 
-        public string VIbsUf
+        public decimal VIbsUf
         {
             get => v_ibs_uf;
             set => v_ibs_uf = value;
         }
 
-        public string PIbsMun
+        public decimal PIbsMun
         {
             get => p_ibs_mun;
             set => p_ibs_mun = value;
         }
 
-        public string PDifMun
+        public decimal PDifMun
         {
             get => p_dif_mun;
             set => p_dif_mun = value;
         }
 
-        public string VDifMun
+        public decimal VDifMun
         {
             get => v_dif_mun;
             set => v_dif_mun = value;
         }
 
-        public string VDevTribMun
+        public decimal VDevTribMun
         {
             get => v_dev_trib_mun;
             set => v_dev_trib_mun = value;
         }
 
-        public string PRedAliqEfetMun
+        public decimal PRedAliqEfetMun
         {
             get => p_red_aliq_efet_mun;
             set => p_red_aliq_efet_mun = value;
         }
 
-        public string VIbsMun
+        public decimal VIbsMun
         {
             get => v_ibs_mun;
             set => v_ibs_mun = value;
         }
-
-        public string PCbs
+        public decimal PRedAliqMun
+        {
+            get => p_red_aliq_mun_ibs;
+            set => p_red_aliq_mun_ibs = value;
+        }
+        public decimal PCbs
         {
             get => p_cbs;
             set => p_cbs = value;
         }
 
-        public string PDifUfCbs
+        public decimal PDifUfCbs
         {
             get => p_dif_uf_cbs;
             set => p_dif_uf_cbs = value;
         }
 
-        public string VDevTribCbs
+        public decimal VDifCbs
+        {
+            get => v_dif_cbs;
+            set => v_dif_cbs = value;
+        }
+
+        public decimal VDevTribCbs
         {
             get => v_dev_trib_cbs;
             set => v_dev_trib_cbs = value;
         }
 
-        public string PRedAliqCbs
+        public decimal PRedAliqCbs
         {
             get => p_red_aliq_cbs;
             set => p_red_aliq_cbs = value;
         }
 
-        public string VRedAliqCbs
+        public decimal VRedAliqCbs
         {
             get => v_red_aliq_cbs;
             set => v_red_aliq_cbs = value;
         }
 
-        public string VCbs
+        public decimal VCbs
         {
             get => v_cbs;
             set => v_cbs = value;
@@ -508,31 +523,35 @@ namespace nfecreator
             set => cclass_trib_reg = value;
         }
 
-        public string PAliqEfetRegIbsUf
+        public decimal PAliqEfetRegIbsUf
         {
             get => p_aliq_efet_reg_ibs_uf;
             set => p_aliq_efet_reg_ibs_uf = value;
         }
 
-        public string VTribRegIbsUf
+        public decimal VTribRegIbsUf
         {
             get => v_trib_reg_ibs_uf;
             set => v_trib_reg_ibs_uf = value;
         }
-
-        public string VTribRegIbsMun
+        public decimal PAliqEfetRegIbsMun
+        {
+            get => p_aliq_efet_reg_ibs_mun;
+            set => p_aliq_efet_reg_ibs_mun = value;
+        }
+        public decimal VTribRegIbsMun
         {
             get => v_trib_reg_ibs_mun;
             set => v_trib_reg_ibs_mun = value;
         }
 
-        public string PAliqEfetRegCbs
+        public decimal PAliqEfetRegCbs
         {
             get => p_aliq_efet_reg_cbs;
             set => p_aliq_efet_reg_cbs = value;
         }
 
-        public string VTribRegCbs
+        public decimal VTribRegCbs
         {
             get => v_trib_reg_cbs;
             set => v_trib_reg_cbs = value;
@@ -557,7 +576,11 @@ namespace nfecreator
                 
                 "issflag, issvbc, issaliq, isslista, isscodmu, issvalor, isscdtri, " +
                 "tipol, cstipi, vipi, cdpresta, vcompresta, descanp, " +
-                "perglp, pergnat, pergnat_i, vlpartida, vicmssubstituto " +
+                "perglp, pergnat, pergnat_i, vlpartida, vicmssubstituto, " +
+                "cst_is, cclass_trib_is, v_bc_is, p_is, p_is_espec, v_is, cst_ibscbs, cclass_trib_ibscbs, v_bc_ibscbs, p_ibs_uf, p_dif_uf_ibs, v_dif_uf_ibs, " +
+                "v_dev_trib_uf_ibs, p_red_aliq_uf_ibs, p_red_aliq_efet_uf_ibs, v_ibs_uf, p_ibs_mun, p_dif_mun_ibs, v_dev_trib_mun_ibs, p_red_aliq_mun_ibs, " +
+                "p_red_aliq_efet_mun_ibs, v_ibs_mun, p_cbs, p_dif_cbs, v_dif_cbs, v_dev_trib_cbs, p_red_aliq_cbs, v_red_aliq_cbs, p_aliq_efet_cbs, v_cbs, " +
+                "cst_reg, cclass_trib_reg, p_aliq_efet_reg_ibs_uf, v_trib_reg_ibs_uf, p_aliq_efet_reg_ibs_mun, v_trib_reg_ibs_mun, p_aliq_efet_reg_cbs, v_trib_reg_cbs " +
                 "from " + ebase.Path + @"\NFCEI.dbf WHERE nrvenda = " + nrvenda + " ";
                 OleDbCommand cmd = new OleDbCommand(instrucao, ebase.Conn);
                 OleDbDataAdapter da = new OleDbDataAdapter(cmd);
@@ -628,7 +651,6 @@ namespace nfecreator
                         codigoint = row["codigoint"].ToString().Trim(),
                         datae = Convert.ToDateTime(row["datae"].ToString().Trim()),
                         vlcusto = Convert.ToDecimal(row["vlcusto"].ToString().Trim()),
-                                                
                     };
 
                     if(ivenda.bcicms > 0)
@@ -637,6 +659,50 @@ namespace nfecreator
                     if (row["vmimpostos"].ToString() != null)
                         if(row["vmimpostos"].ToString().Trim() != "")
                             ivenda.vtottrib = Convert.ToDecimal(row["vmimpostos"].ToString().Trim());
+
+                    // Reforma Tributária: map new fields from database
+                    // IS
+                    if (dt.Columns.Contains("cst_is")) ivenda.CstIs = row["cst_is"].ToString().Trim();
+                    if (dt.Columns.Contains("cclass_trib_is")) ivenda.CclassTribIs = row["cclass_trib_is"].ToString().Trim();
+                    if (dt.Columns.Contains("v_bc_is") && row["v_bc_is"].ToString().Trim() != "") ivenda.VBcIs = Convert.ToDecimal(row["v_bc_is"].ToString().Trim());
+                    if (dt.Columns.Contains("p_is")) ivenda.PIs = Convert.ToDecimal(row["p_is"].ToString().Trim());
+                    if (dt.Columns.Contains("p_is_espec")) ivenda.PIsEspec = row["p_is_espec"].ToString().Trim();
+                    // IBS/CBS common
+                    if (dt.Columns.Contains("cst_ibscbs")) ivenda.CstIbscbs = row["cst_ibscbs"].ToString().Trim();
+                    if (dt.Columns.Contains("cclass_trib_ibscbs")) ivenda.CclassTribIbscbs = row["cclass_trib_ibscbs"].ToString().Trim();
+                    if (dt.Columns.Contains("v_bc_ibscbs")) ivenda.VBcIbscbs = Convert.ToDecimal(row["v_bc_ibscbs"].ToString().Trim());
+                    // IBS UF
+                    if (dt.Columns.Contains("p_ibs_uf")) ivenda.PIbsUf = Convert.ToDecimal(row["p_ibs_uf"].ToString().Trim());
+                    if (dt.Columns.Contains("p_dif_uf_ibs")) ivenda.PDifUfIbs = Convert.ToDecimal(row["p_dif_uf_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("v_dif_uf_ibs")) ivenda.VDifUfIbs = Convert.ToDecimal(row["v_dif_uf_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("v_dev_trib_uf_ibs")) ivenda.VDevTribUfIbs = Convert.ToDecimal(row["v_dev_trib_uf_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("p_red_aliq_uf_ibs")) ivenda.PRedAliqUfIbs = Convert.ToDecimal(row["p_red_aliq_uf_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("p_red_aliq_efet_uf_ibs")) ivenda.PRedAliqEfetUfIbs = Convert.ToDecimal(row["p_red_aliq_efet_uf_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("v_ibs_uf")) ivenda.VIbsUf = Convert.ToDecimal(row["v_ibs_uf"].ToString().Trim());
+                    // IBS MUN
+                    if (dt.Columns.Contains("p_ibs_mun")) ivenda.PIbsMun = Convert.ToDecimal(row["p_ibs_mun"].ToString().Trim());
+                    if (dt.Columns.Contains("p_dif_mun_ibs"))
+                        ivenda.PDifMun = Convert.ToDecimal(row["p_dif_mun_ibs"].ToString().Trim());
+                  
+                    if (dt.Columns.Contains("v_dev_trib_mun_ibs")) ivenda.VDevTribMun = Convert.ToDecimal(row["v_dev_trib_mun_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("p_red_aliq_mun_ibs")) ivenda.PRedAliqEfetMun = Convert.ToDecimal(row["p_red_aliq_mun_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("p_red_aliq_efet_mun_ibs")) ivenda.PRedAliqEfetMun = Convert.ToDecimal(row["p_red_aliq_efet_mun_ibs"].ToString().Trim());
+                    if (dt.Columns.Contains("v_ibs_mun")) ivenda.VIbsMun = Convert.ToDecimal(row["v_ibs_mun"].ToString().Trim());
+                    // CBS
+                    if (dt.Columns.Contains("p_cbs")) ivenda.PCbs = Convert.ToDecimal(row["p_cbs"].ToString().Trim());
+                    if (dt.Columns.Contains("p_dif_cbs")) ivenda.PDifUfCbs = Convert.ToDecimal(row["p_dif_cbs"].ToString().Trim());
+                    if (dt.Columns.Contains("v_dev_trib_cbs")) ivenda.VDevTribCbs = Convert.ToDecimal(row["v_dev_trib_cbs"].ToString().Trim());
+                    if (dt.Columns.Contains("p_red_aliq_cbs")) ivenda.PRedAliqCbs = Convert.ToDecimal(row["p_red_aliq_cbs"].ToString().Trim());
+                    if (dt.Columns.Contains("v_red_aliq_cbs")) ivenda.VRedAliqCbs = Convert.ToDecimal(row["v_red_aliq_cbs"].ToString().Trim());
+                    if (dt.Columns.Contains("p_aliq_efet_cbs")) ivenda.PAliqEfetRegCbs = Convert.ToDecimal(row["p_aliq_efet_cbs"].ToString().Trim());
+                    if (dt.Columns.Contains("v_cbs")) ivenda.VCbs = Convert.ToDecimal(row["v_cbs"].ToString().Trim());
+                    // Regime
+                    if (dt.Columns.Contains("cst_reg")) ivenda.CstReg = row["cst_reg"].ToString().Trim();
+                    if (dt.Columns.Contains("cclass_trib_reg")) ivenda.CclassTribReg = row["cclass_trib_reg"].ToString().Trim();
+                    if (dt.Columns.Contains("p_aliq_efet_reg_ibs_uf")) ivenda.PAliqEfetRegIbsUf = Convert.ToDecimal(row["p_aliq_efet_reg_ibs_uf"].ToString().Trim());
+                    if (dt.Columns.Contains("v_trib_reg_ibs_uf")) ivenda.VTribRegIbsUf = Convert.ToDecimal(row["v_trib_reg_ibs_uf"].ToString().Trim());
+                    if (dt.Columns.Contains("v_trib_reg_ibs_mun")) ivenda.VTribRegIbsMun = Convert.ToDecimal(row["v_trib_reg_ibs_mun"].ToString().Trim());
+                    if (dt.Columns.Contains("v_trib_reg_cbs")) ivenda.VTribRegCbs = Convert.ToDecimal(row["v_trib_reg_cbs"].ToString().Trim());
 
 
                     ivenda.codigoanp = row["codigoanp"].ToString().Trim();

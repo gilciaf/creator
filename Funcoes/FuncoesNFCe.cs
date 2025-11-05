@@ -42,7 +42,16 @@ using NFe.Classes.Informacoes.Detalhe.ProdEspecifico;
 using NFe.Utils.Tributacao.Federal;
 using NFe.Utils.InformacoesSuplementares;
 using NFe.Classes.Servicos.Inutilizacao;
+using NFe.Classes.Informacoes.Total.IbsCbs;
+using NFe.Classes.Informacoes.Total.IbsCbs.Cbs;
+using NFe.Classes.Informacoes.Total.IbsCbs.Ibs;
+using NFe.Classes.Informacoes.Total.IbsCbs.Monofasica;
 using System.Net;
+using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado;
+using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs;
+using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs.InformacoesCbs;
+using NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.InformacoesIbsCbs.InformacoesIbs;
+using CST = NFe.Classes.Informacoes.Detalhe.Tributacao.Compartilhado.Tipos.CST;
 
 namespace nfecreator
 {
@@ -2078,17 +2087,62 @@ namespace nfecreator
                     CSTIS = CSTIS.Is000,
                     cClassTribIS = "000000",
                     vBCIS = ivenda.VBcIs,
-                //   pIS = ivenda.PIs,
+                    pIS = ivenda.PIs,
                     pISEspec = 2,
                     uTrib = ivenda.Utrib,
                     qTrib = ivenda.Qtrib,
-                //     vIS = ivenda.VIs
+                    vIS = (ivenda.VBcIs * ivenda.PIs) / 100
                 };
                 
                 if (det.imposto == null)
                     det.imposto = new imposto();
+                
+                var cstIbs = CST.Cst000;
+                switch ((ivenda.CstIbscbs ?? string.Empty).Trim())
+                {
+                    case "000":
+                        cstIbs = CST.Cst000;
+                        break;
+                    case "200":
+                        cstIbs = CST.Cst200;
+                        break;
+                    case "220":
+                        cstIbs = CST.Cst220;
+                        break;
+                    case "221":
+                        cstIbs = CST.Cst221;
+                        break;
+                    case "400":
+                        cstIbs = CST.Cst400;
+                        break;
+                    case "410":
+                        cstIbs = CST.Cst410;
+                        break;
+                    case "510":
+                        cstIbs = CST.Cst510;
+                        break;
+                    case "550":
+                        cstIbs = CST.Cst550;
+                        break;
+                    case "620":
+                        cstIbs = CST.Cst620;
+                        break;
+                    case "800":
+                        cstIbs = CST.Cst800;
+                        break;
+                    case "810":
+                        cstIbs = CST.Cst810;
+                        break;
+                    case "820":
+                        cstIbs = CST.Cst820;
+                        break;
+                    default:
+                        // Mantém padrão Cst000 se código não mapeado
+                        cstIbs = CST.Cst000;
+                        break;
+                }
 
-
+                det.imposto.IBSCBS = BuildIbscbs(ivenda, cstIbs);
                 //if (ivenda.Infadprod.Replace(" ", "") != "")
                 //{
                 //    det.infAdProd = ivenda.Infadprod;
@@ -2102,6 +2156,77 @@ namespace nfecreator
                 return null;
             }
 
+        }
+        private IBSCBS BuildIbscbs(VendaNFCeI ivenda, CST cstIbs)
+        {
+            try
+            {
+                var cstCode = (ivenda.CstIbscbs ?? string.Empty).Trim();
+                // Allowed CSTs to generate IBSCBS
+                var allowed = new HashSet<string> { "000", "200", "220", "222", "510", "515", "550", "620", "810", "811" };
+                if (!allowed.Contains(cstCode))
+                {
+                    return null;
+                }
+
+                bool includeDif = cstCode == "510" || cstCode == "515";
+                bool includeRed = cstCode == "200" || cstCode == "515";
+                bool includeMono = cstCode == "620";
+                bool includeTrib = cstCode != "000";
+                var ibs = new IBSCBS
+                {
+                    CST = cstIbs,
+                    cClassTrib = ivenda.CclassTribIbscbs ?? "000000",
+                    gIBSCBS = new gIBSCBS
+                    {
+                        vBC = ivenda.VBcIbscbs,
+                        gIBSUF = new gIBSUF
+                        {
+                            pIBSUF = ivenda.PIbsUf,
+                            gDif = includeDif ? new gDif { pDif = ivenda.PDifUfIbs, vDif = ivenda.VDifUfIbs } : null,
+                            gDevTrib = new gDevTrib { vDevTrib = ivenda.VDevTribUfIbs },
+                            gRed = includeRed ? new gRed { pRedAliq = ivenda.PRedAliqUfIbs, pAliqEfet = ivenda.PRedAliqEfetUfIbs } : null,
+                            vIBSUF = ivenda.VIbsUf
+                        },
+                        gIBSMun = new gIBSMun
+                        {
+                            pIBSMun = ivenda.PIbsMun,
+                            gDif = includeDif ? new gDif { pDif = ivenda.PDifMun, vDif = ivenda.VDifMun } : null,
+                            gDevTrib = new gDevTrib { vDevTrib = ivenda.VDevTribMun },
+                            gRed = includeRed ? new gRed { pRedAliq = ivenda.PRedAliqMun, pAliqEfet = ivenda.PRedAliqEfetMun } : null,
+                            vIBSMun = ivenda.VIbsMun
+                        },
+                        
+                       vIBS = ivenda.VIbsUf + ivenda.VIbsMun,
+                        gCBS = new gCBS
+                        {
+                            pCBS = ivenda.PCbs,
+                            gDif = includeDif ? new gDif { pDif = ivenda.PDifUfCbs, vDif = ivenda.VDifCbs } : null,
+                            gDevTrib = new gDevTrib { vDevTrib = ivenda.VDevTribCbs },
+                            gRed = includeRed ? new gRed { pRedAliq = ivenda.PRedAliqCbs, pAliqEfet = ivenda.VRedAliqCbs } : null,
+                            vCBS = ivenda.VCbs
+                        },
+                        gTribRegular = includeTrib ? new gTribRegular
+                        {
+                            CSTReg = CST.Cst000,
+                            cClassTribReg = "000000",
+                            pAliqEfetRegIBSUF = ivenda.PAliqEfetRegIbsUf,
+                            vTribRegIBSUF = ivenda.VTribRegIbsUf,
+                            pAliqEfetRegIBSMun = ivenda.PAliqEfetRegIbsMun,
+                            vTribRegIBSMun = ivenda.VTribRegIbsMun,
+                            pAliqEfetRegCBS = ivenda.PAliqEfetRegCbs,
+                            vTribRegCBS = ivenda.VTribRegCbs
+                        } : null
+                    },
+                    gIBSCBSMono = includeMono ? new gIBSCBSMono { } : null
+                };
+
+                return ibs;
+            }
+            catch
+            {
+                return null;
+            }
         }
         protected virtual ICMSBasico ObterIcmsBasic(VendaNFCeI ivenda, CRT crt)
         {
