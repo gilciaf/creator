@@ -497,51 +497,6 @@ namespace nfecreator
                     _nfe.Assina();
                 }
                 
-                /*     try {
-                        var xmlPreview = _nfe.ObterXmlString();
-                        var previewPath = System.IO.Path.Combine(_path, "NFe_Preview");
-                        if (!Directory.Exists(previewPath)) Directory.CreateDirectory(previewPath);
-                        var file = System.IO.Path.Combine(previewPath, _nfe.infNFe.Id.Replace("NFe", "") + "-preview.xml");
-                        File.WriteAllText(file, xmlPreview);
-
-                        // Validate explicitly against isolated NFe 4.00 schemas if folder exists
-                        var schemaBase = @"C:\Schemas\NFe4";
-                        var rootSchema = Path.Combine(schemaBase, "enviNFe_v4.00.xsd");
-                        var logsDir = Path.Combine(_path, "logs");
-                        if (!Directory.Exists(logsDir)) Directory.CreateDirectory(logsDir);
-                        var logFile = Path.Combine(logsDir, _nfe.infNFe.Id.Replace("NFe", "") + "-schema-validation.log");
-                        try
-                        {
-                            if (Directory.Exists(schemaBase) && File.Exists(rootSchema))
-                            {
-                                var validation = NFeSchemaValidator.ValidateXmlString(xmlPreview, rootSchema, schemaBase);
-                                File.WriteAllText(logFile, validation.Log ?? string.Empty);
-                                if (!validation.Success)
-                                {
-                                    Funcoes.Mensagem("Falha na validação XSD isolada (NFe 4.00). Verifique o log: " + logFile,
-                                                     "Validação de Schema", MessageBoxButton.OK);
-                                    return null;
-                                }
-                            }
-                            else
-                            {
-                                // Log that the isolated schema folder/root is missing
-                                File.WriteAllText(logFile, "[SchemaValidation] Pasta ou XSD raiz não encontrados. Esperado: " + rootSchema);
-                            }
-                        }
-                        catch (Exception exValid)
-                        {
-                            File.WriteAllText(logFile, "[SchemaValidation] EXCEPTION ao validar: " + exValid);
-                            throw;
-                        }
-                    }
-                    catch
-                    {
-                         apenas não interromper o fluxo se falhar o preview 
-                     Console.WriteLine("Erro ao salvar o preview da NFe");
-                }  */
-           
-                
                 if (_configuracoes.CfgServico.SalvarXmlServicos)
                     FuncoesFTP.GuardaXML(_nfe.ObterXmlString(), _path + @"\", "VERIFICAR-" + _nfe.infNFe.Id + "-procNFe");
 
@@ -660,12 +615,22 @@ namespace nfecreator
                             retorno = ConsultaRecibo(vendanfe, vendanfea, retornoEnvio.Retorno.infRec.nRec);
                 }
                 else if (valorStat == 204)
-                {
+                {   
+                    /*
+                    var proc = new nfeProc
+                    {
+                        NFe = _nfe,
+                        protNFe = retornoEnvio.Retorno.protNFe,
+                        versao = retornoEnvio.Retorno.versao
+                    };
+                    FuncoesFTP.GuardaXML(proc.ObterXmlString(), _path + @"\NF_Autorizada\", _nfe.infNFe.Id.Replace("NFe", "") + "-procNFe");
+                     */
                     vendanfea.Statusnfe = "REJEITADO";
                     vendanfea.Chave = _nfe.infNFe.Id.Replace("NFe", "");
                     vendanfea.Ambiente = ((int)_configuracoes.CfgServico.tpAmb).ToString();
                     vendanfea.Update();
                     MinhaNotificacao.NotificarAviso("SEFAZ INFORMA", "Duplicidade de NF-e");
+                    
 
                     if (retornoEnvio.Retorno.infRec != null)
                         if (!string.IsNullOrWhiteSpace(retornoEnvio.Retorno.infRec.nRec))
@@ -677,6 +642,51 @@ namespace nfecreator
                     vendanfea.Chave = _nfe.infNFe.Id.Replace("NFe", "");
                     vendanfea.Ambiente = ((int)_configuracoes.CfgServico.tpAmb).ToString();
                     vendanfea.Update();
+                    var proc = new nfeProc
+                    {
+                        NFe = _nfe,
+                        protNFe = retornoEnvio.Retorno.protNFe,
+                        versao = retornoEnvio.Retorno.versao
+                    };
+                  //  Console.WriteLine("ENTRANDO ultimo ELSE RETORNO");
+                    try {
+                        var xmlPreview = _nfe.ObterXmlString();
+                        var previewPath = System.IO.Path.Combine(_path, "NFe_Preview");
+                        if (!Directory.Exists(previewPath)) Directory.CreateDirectory(previewPath);
+                        var file = System.IO.Path.Combine(previewPath, _nfe.infNFe.Id.Replace("NFe", "") + "-preview.xml");
+                        File.WriteAllText(file, xmlPreview);
+
+                        // Validate explicitly against isolated NFe 4.00 schemas if folder exists
+                        var schemaBase = @"C:\Ciaf\Schemas";
+                        var rootSchema = Path.Combine(schemaBase, "enviNFe_v4.00.xsd");
+                        var logsDir = Path.Combine(_path, "logs");
+                        if (!Directory.Exists(logsDir)) Directory.CreateDirectory(logsDir);
+                        var logFile = Path.Combine(logsDir, _nfe.infNFe.Id.Replace("NFe", "") + "-schema-validation.log");
+                        try
+                        {
+                            if (Directory.Exists(schemaBase) && File.Exists(rootSchema))
+                            {
+                                var validation = NFeSchemaValidator.ValidateXmlString(xmlPreview, rootSchema, schemaBase);
+                                File.WriteAllText(logFile, validation.Log ?? string.Empty);
+                                
+                            }
+                            else
+                            {
+                                // Log that the isolated schema folder/root is missing
+                                File.WriteAllText(logFile, "[SchemaValidation] Pasta ou XSD raiz não encontrados. Esperado: " + rootSchema);
+                            }
+                        }
+                        catch (Exception exValid)
+                        {
+                            File.WriteAllText(logFile, "[SchemaValidation] EXCEPTION ao validar: " + exValid);
+                            throw;
+                        }
+                    }
+                    catch
+                    {
+                       /*  apenas não interromper o fluxo se falhar o preview */
+                     Console.WriteLine("Erro ao salvar o preview da NFe");
+                    }
                 }
                 if (retorno == "") retorno = retornoEnvio.RetornoStr;
                 return retorno;
@@ -1375,7 +1385,7 @@ namespace nfecreator
         /// </summary>
         /// <param name="numero"></param>
         /// <param name="modelo"></param>
-        /// <param name="versao"></param>
+        /// <param name="versao"></param>s
         /// <returns></returns>
         protected virtual NFe.Classes.NFe GetNf(int numero, ModeloDocumento modelo, VersaoServico versao)
         {
@@ -2271,7 +2281,6 @@ namespace nfecreator
                         }
                     }
 
-
                     det.impostoDevol = new impostoDevol()
                     {
                         IPI = new IPIDevolvido()
@@ -2298,7 +2307,7 @@ namespace nfecreator
                     det.imposto = new imposto();
 
                 // Instanciação segura de toda a árvore IBSCBS evitando NRE
-                
+                Console.WriteLine("Detalhe DIFERIMENTO: " + ivendanfe.PDifUfIbs);
                 var cstIbs = CST.Cst000;
                 switch ((ivendanfe.CstIbscbs ?? string.Empty).Trim())
                 {
@@ -2343,85 +2352,13 @@ namespace nfecreator
                         cstIbs = CST.Cst000;
                         break;
                 }
-                
-                det.imposto.IBSCBS = new IBSCBS
+
+                if (ivendanfe.PDifUfIbs.Equals("") || ivendanfe.PDifUfIbs.Equals("0") || ivendanfe.PDifUfIbs == null)
                 {
-                    CST = cstIbs,
-                    cClassTrib = ivendanfe.CclassTribIbscbs ?? "000000",
-                    gIBSCBS = new gIBSCBS
-                    {
-                        vBC = ivendanfe.VBcIbscbs,
-                        gIBSUF = new gIBSUF
-                        {
-                            pIBSUF = ivendanfe.PIbsUf,
-                            gDif = new gDif
-                            {
-                                pDif = ivendanfe.PDifUfIbs,
-                                vDif = ivendanfe.VDifUfIbs
-                            },
-                            gDevTrib = new gDevTrib
-                            {
-                                vDevTrib = ivendanfe.VDevTribUfIbs
-                            },
-                            gRed = new gRed
-                            {
-                                pRedAliq = ivendanfe.PRedAliqUfIbs,
-                                pAliqEfet = ivendanfe.PRedAliqEfetUfIbs
-                            },
-                            vIBSUF = ivendanfe.VIbsUf
-                        },
-                        gIBSMun = new gIBSMun
-                        {
-                            pIBSMun = ivendanfe.PIbsMun,
-                            gDif = new gDif
-                            {
-                                pDif = ivendanfe.PDifMun,
-                                vDif = ivendanfe.VDifMun
-                            },
-                            gDevTrib = new gDevTrib
-                            {
-                                vDevTrib = ivendanfe.VDevTribMun
-                            },
-                            gRed = new gRed
-                            {
-                                pRedAliq = ivendanfe.PRedAliqMun,
-                                pAliqEfet = ivendanfe.PRedAliqEfetMun
-                            },
-                            vIBSMun = ivendanfe.VIbsMun
-                        },
-                        vIBS = ivendanfe.VDifUfIbs + ivendanfe.VDifMun,
-                        gCBS = new gCBS
-                        {
-                            pCBS = ivendanfe.PCbs,
-                            gDif = new gDif
-                            {
-                                pDif = ivendanfe.PDifUfCbs,
-                                vDif = ivendanfe.VDifCbs
-                            },
-                            gDevTrib = new gDevTrib
-                            {
-                                vDevTrib = ivendanfe.VDevTribCbs
-                            },
-                            gRed = new gRed
-                            {
-                                pRedAliq = ivendanfe.PRedAliqCbs,
-                                pAliqEfet = ivendanfe.VRedAliqCbs
-                            },
-                            vCBS = ivendanfe.VCbs
-                        },
-                        gTribRegular = new gTribRegular
-                        {
-                            CSTReg = CST.Cst000,
-                            cClassTribReg = "000000",
-                            pAliqEfetRegIBSUF = ivendanfe.PAliqEfetRegIbsUf,
-                            vTribRegIBSUF = ivendanfe.VTribRegIbsUf,
-                            pAliqEfetRegIBSMun = ivendanfe.PAliqEfetRegIbsMun,
-                            vTribRegIBSMun = ivendanfe.VTribRegIbsMun,
-                            pAliqEfetRegCBS = ivendanfe.PAliqEfetRegCbs,
-                            vTribRegCBS = ivendanfe.VTribRegCbs
-                        }
-                    }
-                };
+                    Console.WriteLine("Detalhe DIFERIMENTO NÃO PREENCHE: " + ivendanfe.PDifUfIbs);
+                }
+                // Build IBSCBS only for allowed CSTs and conditionally include nested groups
+                det.imposto.IBSCBS = BuildIbscbs(ivendanfe, cstIbs);
                  
                 return det;
             }
@@ -2435,6 +2372,78 @@ namespace nfecreator
             }
 
         }
+        private IBSCBS BuildIbscbs(VendaNFeI ivendanfe, CST cstIbs)
+        {
+            try
+            {
+                var cstCode = (ivendanfe.CstIbscbs ?? string.Empty).Trim();
+                // Allowed CSTs to generate IBSCBS
+                var allowed = new HashSet<string> { "000", "200", "220", "222", "510", "515", "550", "620", "810", "811" };
+                if (!allowed.Contains(cstCode))
+                {
+                    return null;
+                }
+
+                bool includeDif = cstCode == "510" || cstCode == "515";
+                bool includeRed = cstCode == "200" || cstCode == "515";
+                bool includeMono = cstCode == "620";
+                bool includeTrib = cstCode != "000";
+                var ibs = new IBSCBS
+                {
+                    CST = cstIbs,
+                    cClassTrib = ivendanfe.CclassTribIbscbs ?? "000000",
+                    gIBSCBS = new gIBSCBS
+                    {
+                        vBC = ivendanfe.VBcIbscbs,
+                        gIBSUF = new gIBSUF
+                        {
+                            pIBSUF = ivendanfe.PIbsUf,
+                            gDif = includeDif ? new gDif { pDif = ivendanfe.PDifUfIbs, vDif = ivendanfe.VDifUfIbs } : null,
+                            gDevTrib = new gDevTrib { vDevTrib = ivendanfe.VDevTribUfIbs },
+                            gRed = includeRed ? new gRed { pRedAliq = ivendanfe.PRedAliqUfIbs, pAliqEfet = ivendanfe.PRedAliqEfetUfIbs } : null,
+                            vIBSUF = ivendanfe.VIbsUf
+                        },
+                        gIBSMun = new gIBSMun
+                        {
+                            pIBSMun = ivendanfe.PIbsMun,
+                            gDif = includeDif ? new gDif { pDif = ivendanfe.PDifMun, vDif = ivendanfe.VDifMun } : null,
+                            gDevTrib = new gDevTrib { vDevTrib = ivendanfe.VDevTribMun },
+                            gRed = includeRed ? new gRed { pRedAliq = ivendanfe.PRedAliqMun, pAliqEfet = ivendanfe.PRedAliqEfetMun } : null,
+                            vIBSMun = ivendanfe.VIbsMun
+                        },
+                        
+                       vIBS = ivendanfe.VIbsUf + ivendanfe.VIbsMun,
+                        gCBS = new gCBS
+                        {
+                            pCBS = ivendanfe.PCbs,
+                            gDif = includeDif ? new gDif { pDif = ivendanfe.PDifUfCbs, vDif = ivendanfe.VDifCbs } : null,
+                            gDevTrib = new gDevTrib { vDevTrib = ivendanfe.VDevTribCbs },
+                            gRed = includeRed ? new gRed { pRedAliq = ivendanfe.PRedAliqCbs, pAliqEfet = ivendanfe.VRedAliqCbs } : null,
+                            vCBS = ivendanfe.VCbs
+                        },
+                        gTribRegular = includeTrib ? new gTribRegular
+                        {
+                            CSTReg = CST.Cst000,
+                            cClassTribReg = "000000",
+                            pAliqEfetRegIBSUF = ivendanfe.PAliqEfetRegIbsUf,
+                            vTribRegIBSUF = ivendanfe.VTribRegIbsUf,
+                            pAliqEfetRegIBSMun = ivendanfe.PAliqEfetRegIbsMun,
+                            vTribRegIBSMun = ivendanfe.VTribRegIbsMun,
+                            pAliqEfetRegCBS = ivendanfe.PAliqEfetRegCbs,
+                            vTribRegCBS = ivendanfe.VTribRegCbs
+                        } : null
+                    },
+                    gIBSCBSMono = includeMono ? new gIBSCBSMono { } : null
+                };
+
+                return ibs;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         protected virtual ICMSBasico ObterIcmsBasic(VendaNFeI ivenda, CRT crt)
         {
             try
@@ -2659,8 +2668,6 @@ namespace nfecreator
             }
 
         }
-
-
         /// <summary>
         /// PAGAMENTO
         /// </summary>
@@ -2743,8 +2750,6 @@ namespace nfecreator
             //  + icmsTot.vII
             //  + icmsTot.vIPI
             //  + icmsTot.vIPIDevol.GetValueOrDefault();
-
-
             if (icmsTot.vNF !=
                 icmsTot.vProd
                 - icmsTot.vDesc
@@ -2772,6 +2777,7 @@ namespace nfecreator
             ibscbsTot.gCBS.vDevTrib = vendanfe.VtotDevTribCbs;
             ibscbsTot.gCBS.vCredPres = vendanfe.VtotCredPres;
             ibscbsTot.gCBS.vCredPresCondSus = vendanfe.VtotCredPres;
+            ibscbsTot.gCBS.vCBS = vendanfe.VtotCbs;
             ibscbsTot.gIBS = new gIBS();
             ibscbsTot.gIBS.gIBSMun = new gIBSMunTotal();
             ibscbsTot.gIBS.gIBSMun.vIBSMun = vendanfe.VtotMunIbs;
@@ -2781,6 +2787,7 @@ namespace nfecreator
             ibscbsTot.gIBS.gIBSUF.vDif = vendanfe.VtotUfDif;
             ibscbsTot.gIBS.gIBSUF.vDevTrib = vendanfe.VtotUfDevTrib;
             ibscbsTot.gIBS.gIBSUF.vIBSUF = vendanfe.VtotUfIbs;
+            ibscbsTot.gIBS.vIBS = vendanfe.VtotIbs;
             ibscbsTot.gMono = new gMono();
             ibscbsTot.gMono.vIBSMono = vendanfe.VtotIbsMono;
             ibscbsTot.gMono.vCBSMono = vendanfe.VtotCbsMono;

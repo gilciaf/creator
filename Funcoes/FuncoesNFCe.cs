@@ -2072,6 +2072,21 @@ namespace nfecreator
                         pDevol = ivenda.Aipi
                     };
                 }
+                
+                det.imposto.IS = new IS()
+                {
+                    CSTIS = CSTIS.Is000,
+                    cClassTribIS = "000000",
+                    vBCIS = ivenda.VBcIs,
+                //   pIS = ivenda.PIs,
+                    pISEspec = 2,
+                    uTrib = ivenda.Utrib,
+                    qTrib = ivenda.Qtrib,
+                //     vIS = ivenda.VIs
+                };
+                
+                if (det.imposto == null)
+                    det.imposto = new imposto();
 
 
                 //if (ivenda.Infadprod.Replace(" ", "") != "")

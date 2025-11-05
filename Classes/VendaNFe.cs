@@ -154,13 +154,14 @@ namespace nfecreator
         decimal vtot_uf_dev_trib;
         decimal vtot_uf_ibs;
         
+        decimal vtot_ibs;
         decimal vtot_mun_dif;
         decimal vtot_mun_dev_trib;
         decimal vtot_mun_ibs;
         
         decimal vtot_dif_cbs;
         decimal vtot_dev_trib_cbs;
-        string vtot_cbs;
+        decimal vtot_cbs;
         decimal vtot_cred_pres;
         string vtot_cred_pres_cond_sus;
         
@@ -331,6 +332,12 @@ namespace nfecreator
             set => vtot_mun_dif = value;
         }
 
+        public decimal VtotIbs
+        {
+            get => vtot_ibs;
+            set => vtot_ibs = value;
+        }
+
         public decimal VtotMunDevTrib
         {
             get => vtot_mun_dev_trib;
@@ -355,7 +362,7 @@ namespace nfecreator
             set => vtot_dif_cbs = value;
         }
 
-        public string VtotCbs
+        public decimal VtotCbs
         {
             get => vtot_cbs;
             set => vtot_cbs = value;
@@ -675,12 +682,13 @@ namespace nfecreator
                     vtot_uf_dif = Convert.ToDecimal(row["vtot_uf_dif"].ToString().Trim());
                     vtot_uf_dev_trib = Convert.ToDecimal(row["vtot_uf_dev_trib"].ToString().Trim());
                     vtot_uf_ibs = Convert.ToDecimal(row["vtot_uf_ibs"].ToString().Trim());
+                    vtot_ibs = Convert.ToDecimal(row["vtot_ibs"].ToString().Trim());
                     vtot_mun_dif = Convert.ToDecimal(row["vtot_mun_dif"].ToString().Trim());
                     vtot_mun_dev_trib = Convert.ToDecimal(row["vtot_mun_dev_trib"].ToString().Trim());
                     vtot_mun_ibs = Convert.ToDecimal(row["vtot_mun_ibs"].ToString().Trim());
                     vtot_dif_cbs = Convert.ToDecimal(row["vtot_dif_cbs"].ToString().Trim());
                     vtot_dev_trib_cbs = Convert.ToDecimal(row["vtot_dev_trib_cbs"].ToString().Trim());
-                    vtot_cbs = row["vtot_cbs"].ToString().Trim();
+                    vtot_cbs = Convert.ToDecimal(row["vtot_cbs"].ToString().Trim());
                     vtot_cred_pres = Convert.ToDecimal(row["vtot_cred_pres"].ToString().Trim());
                     vtot_cred_pres_cond_sus = row["vtot_cred_pres_cond_sus"].ToString().Trim();
                     vtot_ibs_mono = Convert.ToDecimal(row["vtot_ibs_mono"].ToString().Trim());

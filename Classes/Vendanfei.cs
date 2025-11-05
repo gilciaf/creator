@@ -178,20 +178,20 @@ namespace nfecreator
         decimal v_ibs_uf;
         
         decimal p_ibs_mun;
-        decimal p_dif_mun;
-        decimal v_dif_mun;
-        decimal v_dev_trib_mun;
-        decimal p_red_aliq_mun;
-        decimal p_red_aliq_efet_mun;
+        decimal p_dif_mun_ibs;
+        decimal v_dif_mun_ibs;
+        decimal v_dev_trib_mun_ibs;
+        decimal p_red_aliq_mun_ibs;
+        decimal p_red_aliq_efet_mun_ibs;
         decimal v_ibs_mun;
         
         decimal p_cbs;
-        
         decimal v_dif_cbs;
         decimal p_dif_cbs;
         decimal v_dev_trib_cbs;
         decimal p_red_aliq_cbs;
         decimal v_red_aliq_cbs;
+        decimal p_aliq_efet_cbs;
         
         decimal v_cbs;
         
@@ -203,8 +203,6 @@ namespace nfecreator
         decimal v_trib_reg_ibs_mun;
         decimal p_aliq_efet_reg_cbs;
         decimal v_trib_reg_cbs;
-
-
 
         public int Id_vendanfei { get => id_vendanfei; set => id_vendanfei = value; }
         public int Id_vendanfe { get => id_vendanfe; set => id_vendanfe = value; }
@@ -449,30 +447,30 @@ namespace nfecreator
 
         public decimal PDifMun
         {
-            get => p_dif_mun;
-            set => p_dif_mun = value;
+            get => p_dif_mun_ibs;
+            set => p_dif_mun_ibs = value;
         }
 
         public decimal VDifMun
         {
-            get => v_dif_mun;
-            set => v_dif_mun = value;
+            get => v_dif_mun_ibs;
+            set => v_dif_mun_ibs = value;
         }
 
         public decimal VDevTribMun
         {
-            get => v_dev_trib_mun;
-            set => v_dev_trib_mun = value;
+            get => v_dev_trib_mun_ibs;
+            set => v_dev_trib_mun_ibs = value;
         }
         public decimal PRedAliqMun
         {
-            get => p_red_aliq_mun;
-            set => p_red_aliq_mun = value;
+            get => p_red_aliq_mun_ibs;
+            set => p_red_aliq_mun_ibs = value;
         }
         public decimal PRedAliqEfetMun
         {
-            get => p_red_aliq_efet_mun;
-            set => p_red_aliq_efet_mun = value;
+            get => p_red_aliq_efet_mun_ibs;
+            set => p_red_aliq_efet_mun_ibs = value;
         }
 
         public decimal VIbsMun
@@ -596,8 +594,8 @@ namespace nfecreator
                 
                 "vicmsefet, descanp, flagstcomb, vbcstretcomb, vicmsstretcomb, ref, lote, vencto, cor, tamanho, registro, vicmssubstituto, " +
                 " cst_is, cclass_trib_is, cclass_trib_ibscbs, v_bc_is, p_is, p_is_espec,v_is, cst_ibscbs, v_bc_ibscbs, p_ibs_uf, p_dif_uf_ibs, " +
-                "v_dif_uf_ibs, v_dev_trib_uf_ibs, p_red_aliq_uf_ibs, p_red_aliq_uf_ibs, v_ibs_uf, p_red_aliq_efet_uf_ibs, p_ibs_mun, p_dif_mun, v_dif_mun, " +
-                "v_dev_trib_mun, p_red_aliq_mun, p_red_aliq_efet_mun, v_ibs_mun, p_cbs, p_dif_cbs, v_dif_cbs, v_dev_trib_cbs, p_red_aliq_cbs, v_red_aliq_cbs, " +
+                "v_dif_uf_ibs, v_dev_trib_uf_ibs, p_red_aliq_uf_ibs, p_red_aliq_uf_ibs, v_ibs_uf, p_red_aliq_efet_uf_ibs, p_ibs_mun, p_dif_mun_ibs, v_dif_mun_ibs, " +
+                "v_dev_trib_mun_ibs, p_red_aliq_mun_ibs, p_red_aliq_efet_mun_ibs, v_ibs_mun, p_cbs, p_dif_cbs, v_dif_cbs, v_dev_trib_cbs, p_red_aliq_cbs, v_red_aliq_cbs, " +
                 "v_cbs, cst_reg, cclass_trib_reg, p_aliq_efet_reg_ibs_uf, v_trib_reg_ibs_uf, p_aliq_efet_reg_ibs_mun, v_trib_reg_ibs_mun, p_aliq_efet_reg_cbs, v_trib_reg_cbs " + 
                 "from " + ebase.Path + @"\vendanfei.dbf WHERE nrvenda = " + nrvenda + " ";
                 OleDbCommand cmd = new OleDbCommand(instrucao, ebase.Conn);
@@ -731,11 +729,11 @@ namespace nfecreator
                         p_red_aliq_efet_uf_ibs = Convert.ToDecimal(row["p_red_aliq_efet_uf_ibs"].ToString().Trim()),
                         v_ibs_uf = Convert.ToDecimal(row["v_ibs_uf"].ToString().Trim()),
                         p_ibs_mun = Convert.ToDecimal(row["p_ibs_mun"].ToString().Trim()),
-                        p_dif_mun = Convert.ToDecimal(row["p_dif_mun"].ToString().Trim()),
-                        v_dif_mun = Convert.ToDecimal(row["v_dif_mun"].ToString().Trim()),
-                        v_dev_trib_mun = Convert.ToDecimal(row["v_dev_trib_mun"].ToString().Trim()),
-                        p_red_aliq_mun =Convert.ToDecimal( row["p_red_aliq_mun"].ToString().Trim()),
-                        p_red_aliq_efet_mun = Convert.ToDecimal(row["p_red_aliq_efet_mun"].ToString().Trim()),
+                        p_dif_mun_ibs = Convert.ToDecimal(row["p_dif_mun_ibs"].ToString().Trim()),
+                        v_dif_mun_ibs = Convert.ToDecimal(row["v_dif_mun_ibs"].ToString().Trim()),
+                        v_dev_trib_mun_ibs = Convert.ToDecimal(row["v_dev_trib_mun_ibs"].ToString().Trim()),
+                        p_red_aliq_mun_ibs =Convert.ToDecimal( row["p_red_aliq_mun_ibs"].ToString().Trim()),
+                        p_red_aliq_efet_mun_ibs = Convert.ToDecimal(row["p_red_aliq_efet_mun_ibs"].ToString().Trim()),
                         v_ibs_mun = Convert.ToDecimal(row["v_ibs_mun"].ToString().Trim()),
                         
                         p_cbs = Convert.ToDecimal(row["p_cbs"].ToString().Trim()),
