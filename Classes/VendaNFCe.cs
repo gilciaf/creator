@@ -132,6 +132,33 @@ namespace nfecreator
         string xpais_retirada;
         string fone_retirada;
         string email_retirada;
+        
+        // REFORMA TRIBUTÁRIA
+        decimal vtot_is;
+        
+        decimal vtot_bc_ibscbs;
+        
+        decimal vtot_uf_dif;
+        decimal vtot_uf_dev_trib;
+        decimal vtot_uf_ibs;
+        
+        decimal vtot_ibs;
+        decimal vtot_mun_dif;
+        decimal vtot_mun_dev_trib;
+        decimal vtot_mun_ibs;
+        
+        decimal vtot_dif_cbs;
+        decimal vtot_dev_trib_cbs;
+        decimal vtot_cbs;
+        decimal vtot_cred_pres;
+        string vtot_cred_pres_cond_sus;
+        
+        decimal vtot_ibs_mono;
+        decimal vtot_cbs_mono;
+        decimal vtot_ibs_mono_reten;
+        decimal vtot_cbs_mono_reten;
+        decimal vtot_ibs_mono_ret;
+        decimal vtot_cbs_mono_ret;
 
 
 
@@ -259,6 +286,125 @@ namespace nfecreator
         public string IM1 { get => im; set => im = value; }
         public string Im { get => im; set => im = value; }
 
+        public decimal VtotIs
+        {
+            get => vtot_is;
+            set => vtot_is = value;
+        }
+
+        public decimal VtotBcIbscbs
+        {
+            get => vtot_bc_ibscbs;
+            set => vtot_bc_ibscbs = value;
+        }
+
+        public decimal VtotUfDif
+        {
+            get => vtot_uf_dif;
+            set => vtot_uf_dif = value;
+        }
+
+        public decimal VtotUfDevTrib
+        {
+            get => vtot_uf_dev_trib;
+            set => vtot_uf_dev_trib = value;
+        }
+
+        public decimal VtotUfIbs
+        {
+            get => vtot_uf_ibs;
+            set => vtot_uf_ibs = value;
+        }
+
+        public decimal VtotIbs
+        {
+            get => vtot_ibs;
+            set => vtot_ibs = value;
+        }
+
+        public decimal VtotMunDif
+        {
+            get => vtot_mun_dif;
+            set => vtot_mun_dif = value;
+        }
+
+        public decimal VtotMunDevTrib
+        {
+            get => vtot_mun_dev_trib;
+            set => vtot_mun_dev_trib = value;
+        }
+
+        public decimal VtotMunIbs
+        {
+            get => vtot_mun_ibs;
+            set => vtot_mun_ibs = value;
+        }
+
+        public decimal VtotDifCbs
+        {
+            get => vtot_dif_cbs;
+            set => vtot_dif_cbs = value;
+        }
+
+        public decimal VtotDevTribCbs
+        {
+            get => vtot_dev_trib_cbs;
+            set => vtot_dev_trib_cbs = value;
+        }
+
+        public decimal VtotCbs
+        {
+            get => vtot_cbs;
+            set => vtot_cbs = value;
+        }
+
+        public decimal VtotCredPres
+        {
+            get => vtot_cred_pres;
+            set => vtot_cred_pres = value;
+        }
+
+        public string VtotCredPresCondSus
+        {
+            get => vtot_cred_pres_cond_sus;
+            set => vtot_cred_pres_cond_sus = value;
+        }
+
+        public decimal VtotIbsMono
+        {
+            get => vtot_ibs_mono;
+            set => vtot_ibs_mono = value;
+        }
+
+        public decimal VtotCbsMono
+        {
+            get => vtot_cbs_mono;
+            set => vtot_cbs_mono = value;
+        }
+
+        public decimal VtotIbsMonoReten
+        {
+            get => vtot_ibs_mono_reten;
+            set => vtot_ibs_mono_reten = value;
+        }
+
+        public decimal VtotCbsMonoReten
+        {
+            get => vtot_cbs_mono_reten;
+            set => vtot_cbs_mono_reten = value;
+        }
+
+        public decimal VtotIbsMonoRet
+        {
+            get => vtot_ibs_mono_ret;
+            set => vtot_ibs_mono_ret = value;
+        }
+
+        public decimal VtotCbsMonoRet
+        {
+            get => vtot_cbs_mono_ret;
+            set => vtot_cbs_mono_ret = value;
+        }
 
         public string ColorStatus
         {

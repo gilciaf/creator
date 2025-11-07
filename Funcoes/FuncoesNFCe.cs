@@ -2395,6 +2395,35 @@ namespace nfecreator
                 MinhaNotificacao.NotificarErro("RETORNO SEFAZ ", "Regra de validação que rege sobre o Total da NF-e. ");
             }
 
+            var isTot = new ISTot();
+            isTot.vIS = vendanfce.VtotIs;
+            
+            var ibscbsTot = new IBSCBSTot();
+            ibscbsTot.vBCIBSCBS = vendanfce.VtotBcIbscbs;
+            ibscbsTot.gCBS = new gCBSTotal();
+            ibscbsTot.gCBS.vDif = vendanfce.VtotDifCbs;
+            ibscbsTot.gCBS.vDevTrib = vendanfce.VtotDevTribCbs;
+            ibscbsTot.gCBS.vCredPres = vendanfce.VtotCredPres;
+            ibscbsTot.gCBS.vCredPresCondSus = vendanfce.VtotCredPres;
+            ibscbsTot.gCBS.vCBS = vendanfce.VtotCbs;
+            ibscbsTot.gIBS = new gIBS();
+            ibscbsTot.gIBS.gIBSMun = new gIBSMunTotal();
+            ibscbsTot.gIBS.gIBSMun.vIBSMun = vendanfce.VtotMunIbs;
+            ibscbsTot.gIBS.gIBSMun.vDevTrib = vendanfce.VtotMunDevTrib;
+            ibscbsTot.gIBS.gIBSMun.vDif = vendanfce.VtotMunDif;
+            ibscbsTot.gIBS.gIBSUF = new gIBSUFTotal();
+            ibscbsTot.gIBS.gIBSUF.vDif = vendanfce.VtotUfDif;
+            ibscbsTot.gIBS.gIBSUF.vDevTrib = vendanfce.VtotUfDevTrib;
+            ibscbsTot.gIBS.gIBSUF.vIBSUF = vendanfce.VtotUfIbs;
+            ibscbsTot.gIBS.vIBS = vendanfce.VtotIbs;
+            ibscbsTot.gMono = new gMono();
+            ibscbsTot.gMono.vIBSMono = vendanfce.VtotIbsMono;
+            ibscbsTot.gMono.vCBSMono = vendanfce.VtotCbsMono;
+            ibscbsTot.gMono.vIBSMonoReten = vendanfce.VtotIbsMono;
+            ibscbsTot.gMono.vCBSMonoReten = vendanfce.VtotCbsMono;
+            ibscbsTot.gMono.vIBSMonoRet = vendanfce.VtotIbsMonoRet;
+            ibscbsTot.gMono.vCBSMonoRet = vendanfce.VtotCbsMonoRet;
+            
             var t = new total
             {
                 ICMSTot = icmsTot
