@@ -99,7 +99,6 @@ namespace nfecreator
                                 modo = "processamentosatce";
                             if (mod == "3f8bbd33-9ddc-4911-bfd3-d73867a24086")
                                 modo = "processamentosatce";
-
                         }
 
                         if (parametros.Contains("/Param00="))

@@ -631,11 +631,31 @@ namespace nfecreator
 
                     //                datacontingencia = reader.GetDateTime("datacontingencia");
 
-
                     //                chavedeacesso = reader["chavedeacesso"].ToString();
                     //                protocolo = reader["protocolo"].ToString();
                     modFrete = 9;
                     Indfinal = 1;
+                    // REFORMA TRIBUTÁRIA
+                    vtot_is = Convert.ToDecimal(row["vtot_is"].ToString().Trim());
+                    vtot_bc_ibscbs = Convert.ToDecimal(row["vtot_bc_ibscbs"].ToString().Trim());
+                    vtot_uf_dif = Convert.ToDecimal(row["vtot_uf_dif"].ToString().Trim());
+                    vtot_uf_dev_trib = Convert.ToDecimal(row["vtot_uf_dev_trib"].ToString().Trim());
+                    vtot_uf_ibs = Convert.ToDecimal(row["vtot_uf_ibs"].ToString().Trim());
+                    vtot_ibs = Convert.ToDecimal(row["vtot_ibs"].ToString().Trim());
+                    vtot_mun_dif = Convert.ToDecimal(row["vtot_mun_dif"].ToString().Trim());
+                    vtot_mun_dev_trib = Convert.ToDecimal(row["vtot_mun_dev_trib"].ToString().Trim());
+                    vtot_mun_ibs = Convert.ToDecimal(row["vtot_mun_ibs"].ToString().Trim());
+                    vtot_dif_cbs = Convert.ToDecimal(row["vtot_dif_cbs"].ToString().Trim());
+                    vtot_dev_trib_cbs = Convert.ToDecimal(row["vtot_dev_trib_cbs"].ToString().Trim());
+                    vtot_cbs = Convert.ToDecimal(row["vtot_cbs"].ToString().Trim());
+                    vtot_cred_pres = Convert.ToDecimal(row["vtot_cred_pres"].ToString().Trim());
+                    vtot_cred_pres_cond_sus = row["vtot_cred_pres_cond_sus"].ToString().Trim();
+                    vtot_ibs_mono = Convert.ToDecimal(row["vtot_ibs_mono"].ToString().Trim());
+                    vtot_cbs_mono = Convert.ToDecimal(row["vtot_cbs_mono"].ToString().Trim());
+                    vtot_ibs_mono_reten = Convert.ToDecimal(row["vtot_ibs_mono_reten"].ToString().Trim());
+                    vtot_cbs_mono_reten = Convert.ToDecimal(row["vtot_cbs_mono_reten"].ToString().Trim());
+                    vtot_ibs_mono_ret = Convert.ToDecimal(row["vtot_ibs_mono_ret"].ToString().Trim());
+                    vtot_cbs_mono_ret = Convert.ToDecimal(row["vtot_cbs_mono_ret"].ToString().Trim());
                     
                 }
 

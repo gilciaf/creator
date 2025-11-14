@@ -68,7 +68,7 @@ namespace nfecreator
         private static void CarregarConfiguracao()
         {
             var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
+            
             try
             {
                 _configuracoes = !File.Exists(path + ArquivoConfiguracao)
@@ -508,7 +508,8 @@ namespace nfecreator
 
                 _nfe.infNFeSupl = new infNFeSupl();
                 _nfe.infNFeSupl.urlChave = _nfe.infNFeSupl.ObterUrlConsulta(_nfe, VersaoQrCode.QrCodeVersao2);
-                _nfe.infNFeSupl.qrCode = _nfe.infNFeSupl.ObterUrlQrCode(_nfe, _configuracoes.ConfiguracaoDanfeNfce.VersaoQrCode, _configuracoes.ConfiguracaoCsc.CIdToken, _configuracoes.ConfiguracaoCsc.Csc);
+               // _nfe.infNFeSupl.qrCode = _nfe.infNFeSupl.ObterUrlQrCode(_nfe, _configuracoes.ConfiguracaoDanfeNfce.VersaoQrCode, _configuracoes.ConfiguracaoCsc.CIdToken, _configuracoes.ConfiguracaoCsc.Csc);
+                _nfe.infNFeSupl.qrCode = _nfe.infNFeSupl.ObterUrlQrCode(_nfe, _configuracoes.ConfiguracaoDanfeNfce.VersaoQrCode, _configuracoes.ConfiguracaoCsc.CIdToken, "dcf51804d78a70ae25f9a6261f6685be");
 
                 _nfe.Valida();
 
@@ -801,22 +802,17 @@ namespace nfecreator
                             vendanfcea.Statusnfe = "REJEITADO";
                             vendanfcea.Ambiente = ((int)_configuracoes.CfgServico.tpAmb).ToString();
                             vendanfcea.Update();
-
-
                         }
-
                         return retornoEnvio.RetornoStr;
                     }
                     catch (Exception exx)
                     {
                         vendanfcea.Statusnfe = "REJEITADO";
-
                         Funcoes.Crashe(exx, "", false);
                         if (ex.InnerException != null)
                             MessageBox.Show(exx.Message + " Outros: " + ex.InnerException.Message, "Erro");
                         else if (!string.IsNullOrEmpty(ex.Message))
                             MessageBox.Show(exx.Message, "Erro");
-
                         return null;
                     }
                 }
@@ -1113,6 +1109,7 @@ namespace nfecreator
 
                 nfeProc proc = null;
                 try
+                
                 {
                     proc = new nfeProc().CarregarDeArquivoXml(local);
                 }
@@ -1123,7 +1120,9 @@ namespace nfecreator
                     _nfe.Assina(); //não precisa validar aqui, pois o lote será validado em ServicosNFe.NFeAutorizacao
                     _nfe.infNFeSupl = new infNFeSupl();
                     _nfe.infNFeSupl.urlChave = _nfe.infNFeSupl.ObterUrlConsulta(_nfe, _configuracoes.ConfiguracaoDanfeNfce.VersaoQrCode);
-                    _nfe.infNFeSupl.qrCode = _nfe.infNFeSupl.ObterUrlQrCode(_nfe, _configuracoes.ConfiguracaoDanfeNfce.VersaoQrCode, _configuracoes.ConfiguracaoCsc.CIdToken, _configuracoes.ConfiguracaoCsc.Csc);
+                    Console.WriteLine("TOKEN : " + _configuracoes.ConfiguracaoCsc.CIdToken + "csc: " + _configuracoes.ConfiguracaoCsc.Csc );
+                   //_nfe.infNFeSupl.qrCode = _nfe.infNFeSupl.ObterUrlQrCode(_nfe, _configuracoes.ConfiguracaoDanfeNfce.VersaoQrCode, _configuracoes.ConfiguracaoCsc.CIdToken, _configuracoes.ConfiguracaoCsc.Csc);
+                    _nfe.infNFeSupl.qrCode = _nfe.infNFeSupl.ObterUrlQrCode(_nfe, _configuracoes.ConfiguracaoDanfeNfce.VersaoQrCode, _configuracoes.ConfiguracaoCsc.CIdToken, "dcf51804d78a70ae25f9a6261f6685be");
 
                     _nfe.Valida(); // não precisa validar aqui, pois o lote será validado em ServicosNFe.NFeAutorizacao
                     FuncoesFTP.GuardaXML(_nfe.ObterXmlString(), _path + @"\NFCE\", "VERIFICAR" + _nfe.infNFe.Id.Replace("NFe", ""));
@@ -1381,6 +1380,8 @@ namespace nfecreator
 
                 infNFe.total = GetTotal(infNFe.det);
 
+                
+                
                 infNFe.pag = GetPagamento(numero, infNFe.total.ICMSTot, versao);
 
                 return infNFe;
@@ -2426,8 +2427,9 @@ namespace nfecreator
             
             var t = new total
             {
-                ICMSTot = icmsTot
-
+                ICMSTot = icmsTot,
+                ISTot = isTot,
+                IBSCBSTot = ibscbsTot
             };
             return t;
         }

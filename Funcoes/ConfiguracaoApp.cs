@@ -24,7 +24,7 @@ namespace nfecreator
             Emitente = new emit { CPF = "", CRT = CRT.SimplesNacional };
             EnderecoEmitente = new enderEmit();
             ConfiguracaoEmail = new ConfiguracaoEmail("email@dominio.com", "senha", "Envio de NFE", "", "smtp.dominio.com", 587, true, true);
-            ConfiguracaoCsc = new ConfiguracaoCsc("000001", "");
+            ConfiguracaoCsc = new ConfiguracaoCsc("000001", "CD97C98B-3C5A-4FCC-82BE-8C12168BF3DD");
             ConfiguracaoDanfeNfce = new ConfiguracaoDanfeNfce(NfceDetalheVendaNormal.UmaLinha, NfceDetalheVendaContigencia.UmaLinha);
             ConfiguracaoDanfeNfe = new ConfiguracaoDanfeNfe();
         }

@@ -2306,8 +2306,7 @@ namespace nfecreator
                 if (det.imposto == null)
                     det.imposto = new imposto();
 
-                // Instanciação segura de toda a árvore IBSCBS evitando NRE
-                Console.WriteLine("Detalhe DIFERIMENTO: " + ivendanfe.PDifUfIbs);
+                // Instanciação segura de toda a árvore IBSCBS evitando NRE                
                 var cstIbs = CST.Cst000;
                 switch ((ivendanfe.CstIbscbs ?? string.Empty).Trim())
                 {
@@ -2416,6 +2415,7 @@ namespace nfecreator
                         gCBS = new gCBS
                         {
                             pCBS = ivendanfe.PCbs,
+                            
                             gDif = includeDif ? new gDif { pDif = ivendanfe.PDifUfCbs, vDif = ivendanfe.VDifCbs } : null,
                             gDevTrib = new gDevTrib { vDevTrib = ivendanfe.VDevTribCbs },
                             gRed = includeRed ? new gRed { pRedAliq = ivendanfe.PRedAliqCbs, pAliqEfet = ivendanfe.VRedAliqCbs } : null,
